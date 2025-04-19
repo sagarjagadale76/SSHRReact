@@ -1,0 +1,15 @@
+[
+  {
+    "username": "admin",
+    "password": "admin123",
+    "role": "admin",
+    "ShipperName":"Just in Time Consulting Ltd"
+  },
+  {
+    "username": "user",
+    "password": "user123",
+    "role": "user",
+    "ShipperName":"Just in Time Consulting Ltd"
+  }
+]
+

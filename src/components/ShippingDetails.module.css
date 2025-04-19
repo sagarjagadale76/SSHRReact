@@ -1,0 +1,40 @@
+/* Button for New Batch */
+.new-batch-button {
+  display: inline-block;
+  margin: 10px 0 20px 0;
+  padding: 10px 15px;
+  background-color: #007BFF;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.new-batch-button:hover {
+  background-color: #0056b3;
+}
+
+/* Links Styling */
+.file-link,
+.parcel-link,
+.details-link {
+  color: #007BFF;
+  text-decoration: none;
+}
+
+.file-link:hover,
+.parcel-link:hover,
+.details-link:hover {
+  text-decoration: underline;
+}
+
+/* Custom Table Row Hover Styling */
+.ag-theme-alpine .ag-row-hover {
+  background-color: #eef !important;
+}
+
+/* Status Column */
+.ag-theme-alpine .ag-cell[data-col-id="status"] {
+  text-align: left;
+}
