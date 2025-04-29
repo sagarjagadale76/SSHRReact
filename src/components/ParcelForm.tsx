@@ -635,8 +635,9 @@ export function ParcelForm() {
                           <SelectValue placeholder="Select service" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="zpl-200">ZPL-200</SelectItem>
-                          <SelectItem value="zpl-300">ZPL-300</SelectItem>
+                        <SelectItem value="TRK001">TRK001</SelectItem>
+                        <SelectItem value="TRK002">TRK002</SelectItem>
+                        <SelectItem value="TRK003">TRK003</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>                    
