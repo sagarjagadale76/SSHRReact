@@ -54,7 +54,8 @@ export function ParcelsTable() {
         ConsigneeCountry: value.ConsigneeCountry,
         BatchId : value.BatchId,
         ServiceId : value.ServiceId,
-        ShipperCompany : value.ShipperCompany,
+        ServiceName:"TrackPak Worldwide",
+        ShipperCompany : value.ShipperConf,
         ZplLabel : value.ZplLabel
         
       });
@@ -139,7 +140,7 @@ export function ParcelsTable() {
       autoHeight: true,
       cellRenderer: (params) => (
         <>
-          <div>{params.data.ShipperCompany}</div>
+          <div>{params.data.ServiceName}</div>
           <div className="text-muted-foreground">({params.data.ServiceId})</div>                  
         </>
       ),

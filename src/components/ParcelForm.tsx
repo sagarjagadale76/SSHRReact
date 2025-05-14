@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Check,Plus, X } from "lucide-react"
+import { Check,Plus, X, ShoppingCart, Loader2, PackageOpen, Send, Settings, User, Info, Package } from "lucide-react"
 import { Button } from "./ui/button"
 import { CardHeader,CardContent, Card } from "./ui/card"
 import { Checkbox } from "./ui/checkbox"
@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Textarea } from "./ui/textarea"
 import { useNavigate,useLocation } from 'react-router-dom';
 import axios from "axios";
+import { Badge } from "./ui/badge";
 
 interface ParcelItem {
   Id: number
@@ -40,6 +41,16 @@ export function ParcelForm() {
   let navigate = useNavigate();
   const location = useLocation();
   const [checked, setChecked] = React.useState(false);
+  const totalSteps = 4;
+    const steps = [
+      { id: "info", title: "Service Info", icon: <Info size={20} /> },    
+      { id: "userdetail", title: "User Info", icon: <Settings size={20} /> },
+      { id: "parcel", title: "Parcel Items", icon: <Package size={20} /> },
+      { id: "checkout", title: "Checkout", icon: <ShoppingCart size={20} /> }
+    ];
+    
+    const [activeStep, setActiveStep] = React.useState(0);
+    const [loading, setLoading] = React.useState(false);
   const [parcel, setParcel] = React.useState({
     Id: 0,
     Quantity: 0,
@@ -260,7 +271,7 @@ export function ParcelForm() {
                 ImageUrl: "",
       },
     ])
-    const [activeTab, setActiveTab] = React.useState("1")
+    const [selectedParcelId, setSelectedParcelId] = React.useState(1)
   
     const addNewParcel = () => {
        let newId = 1;
@@ -296,7 +307,7 @@ export function ParcelForm() {
                 ImageUrl: "",
         },
       ])
-      setActiveTab(newId.toString())
+      setSelectedParcelId(newId)
     }
   
     const deleteParcel = (id: number) => {
@@ -304,7 +315,7 @@ export function ParcelForm() {
       if (parcels.length > 1) {
         const newParcels = parcels.filter((parcel) => parcel.Id !== id)
         setParcels(newParcels)
-        setActiveTab(newParcels[0].Id.toString())
+        setSelectedParcelId(newParcels[0].Id)
       }
     }
 
@@ -407,320 +418,279 @@ export function ParcelForm() {
       
     }
 
+    // Navigation functions
+  const nextStep = () => {
+    if (activeStep < totalSteps - 1) {
+      setActiveStep(activeStep + 1)
+    }
+  }
+  
+  const prevStep = () => {
+    if (activeStep > 0) {
+      setActiveStep(activeStep - 1)
+    }
+  }
+    
+  
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>      
-      <DialogContent className="max-w-3xl h-[90vh] p-0">
-        <div className="h-full overflow-hidden flex flex-col">
-          <CardHeader className="space-y-1.5 p-6">
-            <div className="space-y-0.5">
-              <h2 className="text-lg font-semibold">View parcel reference: {parcelData.OrderReference}</h2>
-              <div className="text-sm text-blue-600">
-                <span className="flex items-center gap-1">
-                  <Check className="h-4 w-4" />
-                  Data saved ok
-                </span>
-              </div>
-              <div className="text-sm text-muted-foreground">System tracking number: {parcelData.TrackingNumber}</div>
-              <div className="text-sm">
-                Source: Parcel #4644
-                <button className="text-blue-600 ml-2">Parcel audit</button>
-              </div>
-            </div>
-
-            
-          </CardHeader>
-
-
-
-          <div className="w-full overflow-auto max-w-5xl mx-auto p-4 h-[calc(100vh-2rem)]">
-      <Tabs defaultValue="info" className="w-full flex flex-col h-full">
-        <TabsList className="w-full grid grid-cols-3">
-          <TabsTrigger
-            value="info"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-          >
-            INFO AND LABEL
-          </TabsTrigger>
-          <TabsTrigger
-            value="sender"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-          >
-            SENDER AND DESTINATION
-          </TabsTrigger>
-          <TabsTrigger
-            value="parcel"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-          >
-            PARCEL ITEMS
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="sender" className="mt-6">
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Sender Section */}
-            <div className="space-y-4">
-              <h2 className="text-xl font-medium">Sender</h2>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="sender-name">NAME</Label>
-                  <Input id="sender-name"  value={parcelData.ShipperConfig.ShipperName} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sender-company">COMPANY NAME</Label>
-                  <Input id="sender-company"  value={parcelData.ShipperConfig.AccountCode} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sender-address1">ADDRESS1</Label>
-                  <Input id="sender-address1" value={parcelData.ShipperConfig.Address1} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sender-address2">ADDRESS2</Label>
-                  <Input id="sender-address2"value={parcelData.ShipperConfig.Address2} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sender-address3">ADDRESS3</Label>
-                  <Input id="sender-address3" value={parcelData.ShipperConfig.Address3} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="sender-city">CITY</Label>
-                    <Input id="sender-city" value={parcelData.ShipperConfig.City} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="sender-state">STATE</Label>
-                    <Input id="sender-state" value={parcelData.ShipperConfig.State}/>
+      // <Dialog open={open} onOpenChange={setOpen} >      
+      //   <DialogContent className="max-w-3xl h-[90vh] p-0">
+      //     <DialogClose onClick={openParcelTable}/>
+         
+      <div className="bg-gray-50 min-h-screen">
+        <div className="container mx-auto py-6 px-4 max-w-5xl">
+          <div className="bg-white rounded-lg shadow-md">
+            {/* Header */}
+            <div className="p-6 border-b">          
+              
+              {/* Progress Bar */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between">
+            {steps.map((step, index) => (
+              <React.Fragment key={step.id}>
+                {/* Step Button */}
+                <div className="flex flex-col items-center relative">
+                  <button
+                    className={`flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all ${
+                      index < activeStep 
+                        ? "bg-green-500 border-green-500 text-white"
+                        : index === activeStep
+                        ? "border-blue-500 bg-blue-500 text-white"
+                        : "border-gray-300 bg-white text-gray-400"
+                    }`}
+                    onClick={() => setActiveStep(index)}
+                  >
+                    {index < activeStep ? (
+                      <Check size={20} />
+                    ) : (
+                      step.icon
+                    )}
+                  </button>
+                  <span className={`text-sm mt-2 ${index === activeStep ? "font-semibold text-blue-500" : "text-gray-500"}`}>
+                    {step.title}
+                  </span>
+                  
+                  {/* Step Number Badge */}
+                  <div className="absolute -top-2 -right-2">
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
+                      index < activeStep ? "bg-green-500 text-white" : 
+                      index === activeStep ? "bg-blue-500 text-white" : 
+                      "bg-gray-300 text-gray-600"
+                    }`}>
+                      {index + 1}
+                    </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="sender-zip">ZIP</Label>
-                    <Input id="sender-zip" value={parcelData.ShipperConfig.Zip}/>
+                
+                {/* Connector Line */}
+                {index < steps.length - 1 && (
+                  <div className="flex-1 h-0.5 mx-4 relative">
+                    <div className="absolute inset-0 bg-gray-200"></div>
+                    <div 
+                      className="absolute inset-0 bg-blue-500 transition-all" 
+                      style={{ width: index < activeStep ? "100%" : "0%" }}
+                    ></div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="sender-country">COUNTRY</Label>
-                    <Select value={parcelData.ShipperConfig.Country} >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select country"></SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="GB">United Kingdom</SelectItem>
-                        <SelectItem value="US">United States</SelectItem>
-                        <SelectItem value="DE">Germany</SelectItem>
-                        {/* Add more countries as needed */}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sender-phone">PHONE</Label>
-                  <Input id="sender-phone" value={parcelData.ShipperConfig.Phone} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sender-email">EMAIL</Label>
-                  <Input id="sender-email" value={parcelData.ShipperConfig.Email}/>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sender-vat">VAT</Label>
-                  <Input id="sender-vat" value={parcelData.ShipperConfig.Vat}/>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sender-ioss">IOSS</Label>
-                  <Input id="sender-ioss" value={parcelData.ShipperConfig.Ioss}/>
-                </div>
-              </div>
-            </div>
-
-            {/* Destination Section */}
-            <div className="space-y-4">
-              <h2 className="text-xl font-medium">Destination</h2>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="dest-name">NAME</Label>
-                  <Input id="dest-name" value={parcelData.ConsigneeName} onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneeName")}/>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dest-company">COMPANY NAME</Label>
-                  <Input id="dest-company" value={parcelData.ConsigneeCompanyName} onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneeCompanyName")}/>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dest-address1">ADDRESS1</Label>
-                  <Input id="dest-address1" value={parcelData.ConsigneeAddress1} onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneeAddress1")}/>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dest-address2">ADDRESS2</Label>
-                  <Input id="dest-address2" value={parcelData.ConsigneeAddress2} onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneeAddress2")}/>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dest-address3">ADDRESS3</Label>
-                  <Input id="dest-address3" value={parcelData.ConsigneeAddress3} onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneeAddress3")}/>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="dest-city">CITY</Label>
-                    <Input id="dest-city" value={parcelData.ConsigneeCity} onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneeCity")}/>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="dest-state">STATE</Label>
-                    <Input id="dest-state" value={parcelData.ConsigneeState} onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneeState")}/>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="dest-zip">ZIP</Label>
-                    <Input id="dest-zip" value={parcelData.ConsigneeZip} onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneeZip")}/>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="dest-country">COUNTRY</Label>
-                    <Select value={parcelData.ConsigneeCountry} onValueChange={(e)=> changeParcelDataDropdownHandler(e,"ConsigneeCountry")}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select country" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="GB">United Kingdom</SelectItem>
-                        <SelectItem value="US">United States</SelectItem>
-                        <SelectItem value="DE">Germany</SelectItem>
-                        {/* Add more countries as needed */}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dest-phone">PHONE</Label>
-                  <Input id="dest-phone" value={parcelData.ConsigneePhone} onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneePhone")}/>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dest-email">EMAIL</Label>
-                  <Input id="dest-email" value={parcelData.ConsigneeEmail} onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneeEmail")}/>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dest-id">ID NUMBER</Label>
-                  <Input id="dest-id" value={parcelData.ConsigneeId} onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneeId")}/>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="dest-type">TYPE</Label>
-                    <Select value={parcelData.Type} onValueChange={(e) => changeParcelDataDropdownHandler(e,"Type")}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="type1">Type 1</SelectItem>
-                        {/* Add more types as needed */}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="dest-value">VALUE</Label>
-                    <Input type="number" id="dest-value" value={parcelData.Value} onChange={ (e)=> changeParcelDataTextboxHandler(e,"Value")}/>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dest-address-code">ADDRESS CODE</Label>
-                  <Input id="dest-address-code" value={parcelData.AddressCode} onChange={ (e)=> changeParcelDataTextboxHandler(e,"AddressCode")}/>
-                </div>
-              </div>
-            </div>
+                )}
+              </React.Fragment>
+            ))}
           </div>
-        </TabsContent>
-
-        <TabsContent value="info" className="mt-6">
-        <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-medium mb-4">Service and label</h3>
-                  <div className="grid gap-4">
-                    <div className="grid gap-2">
-                      <Label>Service</Label>
-                      <Select value={parcelData.ServiceId} onValueChange={(e)=> changeParcelDataDropdownHandler(e,"ServiceId")}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select service" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="zpl-200">ZPL-200</SelectItem>
-                          <SelectItem value="zpl-300">ZPL-300</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>                    
-                    <div className="grid gap-2">
-                      <Label>Label Format</Label>
-                      <Select value={parcelData.LabelFormat} onValueChange={(e) => changeParcelDataDropdownHandler(e,"LabelFormat")}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select service" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="zpl-200">ZPL-200</SelectItem>
-                          <SelectItem value="zpl-300">ZPL-300</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+        </div>
+            </div>       
+          
+          {/* Content area */}
+          <div className="p-6">
+              {/* Step 1: Package Details */}
+              {activeStep === 0 && (
+                <div className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {/* Service and Label */}
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <h3 className="text-lg font-medium">Service and Label</h3>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="service">Service</Label>
+                          <Select 
+                            value={parcelData.ServiceId}
+                            onValueChange={(e) => changeParcelDataDropdownHandler(e,"ServiceId")}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select service" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="TRK001">Express (TRK001)</SelectItem>
+                              <SelectItem value="TRK002">Standard (TRK002)</SelectItem>
+                              <SelectItem value="TRK003">Economy (TRK003)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="labelFormat">Label Format</Label>
+                          <Select value={parcelData.LabelFormat} onValueChange={(e) => changeParcelDataDropdownHandler(e,"LabelFormat")}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select format" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="zpl-200">ZPL-200</SelectItem>
+                              <SelectItem value="zpl-300">ZPL-300</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="orderRef">Order Reference</Label>
+                          <Input 
+                            id="orderRef" 
+                            value={parcelData.OrderReference} 
+                            onChange={ (e)=> changeParcelDataTextboxHandler(e,"OrderReference")}
+                            placeholder="Enter order reference"
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    {/* Price Information */}
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <h3 className="text-lg font-medium">Price Information</h3>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="valueGoods">Value of Goods</Label>
+                            <div className="flex gap-2">                                                    
+                            <Input 
+                              id="valueGoods" 
+                              type="number" 
+                              value={parcelData.ValueOfGoods} 
+                              onChange={ (e)=> changeParcelDataTextboxHandler(e,"ValueOfGoods")}
+                              placeholder="0.00"
+                            />
+                              <Select 
+                                value={parcelData.Currency}                               
+                                onValueChange={(e)=> changeParcelDataDropdownHandler(e,"Currency")}
+                                
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="GBP">GBP</SelectItem>
+                                  <SelectItem value="USD">USD</SelectItem>
+                                  <SelectItem value="EUR">EUR</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="codAmount">COD Amount</Label>
+                            <Input 
+                              id="codAmount" 
+                              type="number" 
+                              value={parcelData.CodAmount} 
+                              onChange={ (e)=> changeParcelDataTextboxHandler(e,"CodAmount")}
+                              placeholder="0.00"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="shippingCost">Shipping Cost</Label>
+                            <Input 
+                              id="shippingCost" 
+                              type="number" 
+                              value={parcelData.ShippingCost} 
+                              onChange={ (e)=> changeParcelDataTextboxHandler(e,"ShippingCost")}
+                              placeholder="0.00"
+                            />
+                          </div>
+                          
+                          
+                          
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-medium mb-4">Basic Parcel Information</h3>
-                  <div className="grid gap-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="grid gap-2">
-                        <Label>Order Reference</Label>
-                        <Input value={parcelData.OrderReference} onChange={ (e)=> changeParcelDataTextboxHandler(e,"OrderReference")}/>                        
-                      </div>                      
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="grid gap-2">
-                        <Label>Price</Label>
-                        <div className="flex gap-2">
-                          <Input type="number" className="flex-1" value={parcelData.Price} onChange={ (e)=> changeParcelDataTextboxHandler(e,"Price")}/>
-                          <Select value={parcelData.Currency} onValueChange={(e) => changeParcelDataDropdownHandler(e,"Currency")}>
-                            <SelectTrigger className="w-24">
-                              <SelectValue></SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="GBP">GBP</SelectItem>
-                              <SelectItem value="USD">USD</SelectItem>
-                              <SelectItem value="EUR">EUR</SelectItem>
-                            </SelectContent>
-                          </Select>
+                  
+                  {/* Package Information */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <h3 className="text-lg font-medium">Package Information</h3>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid md:grid-cols-5 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="weight">Weight</Label>
+                          <div className="flex gap-2">
+                            <Input 
+                              id="weight" 
+                              type="number" 
+                              value={parcelData.Weight} 
+                              onChange={ (e)=> changeParcelDataTextboxHandler(e,"Weight")}
+                              placeholder="0"
+                            />
+                            <Select                             
+                              value={parcelData.WeightUnit} 
+                              onValueChange={(e) => changeParcelDataDropdownHandler(e,"WeightUnit")}
+                              
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="kg">kg</SelectItem>
+                                <SelectItem value="g">g</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
-                      </div>
-                      <div className="grid gap-2">
-                        <Label>COD Amount</Label>
-                        <div className="flex gap-2">
-                          <Input type="number" value={parcelData.CodAmount} onChange={ (e)=> changeParcelDataTextboxHandler(e,"CodAmount")}/>
-                          <Select onValueChange={(e)=> changeParcelDataDropdownHandler(e,"Currency")}>
-                            <SelectTrigger className="w-24">
-                              <SelectValue>{parcelData.Currency}</SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="GBP">GBP</SelectItem>
-                              <SelectItem value="USD">USD</SelectItem>
-                              <SelectItem value="EUR">EUR</SelectItem>
-                            </SelectContent>
-                          </Select>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="length">Length</Label>
+                          <Input 
+                            id="length" 
+                            type="number" 
+                            value={parcelData.Length} 
+                            onChange={ (e)=> changeParcelDataTextboxHandler(e,"Length")}
+                            placeholder="0"
+                          />
                         </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-4 gap-4">
-                      <div className="grid gap-2">
-                        <Label>Weight</Label>
-                        <div className="flex gap-2">
-                          <Input type="number" value={parcelData.Weight} onChange={ (e)=> changeParcelDataTextboxHandler(e,"Weight")}/>
-                          <Select value={parcelData.WeightUnit} onValueChange={(e) => changeParcelDataDropdownHandler(e,"WeightUnit")}>
-                            <SelectTrigger className="w-20">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="kg">kg</SelectItem>
-                            </SelectContent>
-                          </Select>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="width">Width</Label>
+                          <Input 
+                            id="width" 
+                            type="number" 
+                            value={parcelData.Width} 
+                            onChange={ (e)=> changeParcelDataTextboxHandler(e,"Width")}
+                            placeholder="0"
+                          />
                         </div>
-                      </div>
-                      <div className="grid gap-2">
-                        <Label>Length</Label>
-                        <div className="flex gap-2">
-                          <Input type="number" value={parcelData.Length} onChange={ (e)=> changeParcelDataTextboxHandler(e,"Length")}/>
-                          <Select value={parcelData.DimensionUnit} onValueChange={(e) => changeParcelDataDropdownHandler(e,"DimensionUnit")}>
-                            <SelectTrigger className="w-20">
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="height">Height</Label>
+                          <Input 
+                            id="height" 
+                            type="number" 
+                            value={parcelData.Height} 
+                            onChange={ (e)=> changeParcelDataTextboxHandler(e,"Height")}
+                            placeholder="0"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="dimensionUnit">Unit</Label>
+                          <Select 
+                            value={parcelData.DimensionUnit} 
+                            onValueChange={(e) => changeParcelDataDropdownHandler(e,"DimensionUnit")}
+                          >
+                            <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -730,261 +700,558 @@ export function ParcelForm() {
                           </Select>
                         </div>
                       </div>
-                      <div className="grid gap-2">
-                        <Label>Width</Label>
-                        <Input type="number" value={parcelData.Width} onChange={ (e)=> changeParcelDataTextboxHandler(e,"Width")}/>
+                      
+                      <div className="mt-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="description">Description</Label>
+                          <Textarea 
+                            id="description" 
+                            value={parcelData.Description} 
+                            onChange={ (e)=> changeParcelDataTextboxHandler(e,"Description")}
+                            placeholder="Enter package description"
+                            rows={3}
+                          />
+                        </div>
                       </div>
-                      <div className="grid gap-2">
-                        <Label>Height</Label>
-                        <Input type="number" value={parcelData.Height} onChange={ (e)=> changeParcelDataTextboxHandler(e,"Height")}/>
+                      
+                      <div className="mt-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="customerRef">Customer Reference</Label>
+                          <Input 
+                            id="customerRef" 
+                            value={parcelData.CustomerReference} 
+                            onChange={ (e)=> changeParcelDataTextboxHandler(e,"CustomerReference")}
+                            placeholder="Enter customer reference"
+                          />
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="grid gap-2">
-                        <Label>Shipping Cost</Label>
-                        <div className="flex gap-2">
-                          <Input type="number" value={parcelData.ShippingCost} onChange={ (e)=> changeParcelDataTextboxHandler(e,"ShippingCost")}/>
-                          <Select onValueChange={(e)=> changeParcelDataDropdownHandler(e,"Currency")}>
+                      
+                      <div className="mt-4 flex items-center gap-8">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="dangerous" 
+                            checked={parcelData.DangerousGoods}
+                            onCheckedChange={() => setDangerousGoods()}
+                          />
+                          <Label htmlFor="dangerous" className="font-medium">
+                            Dangerous Goods
+                          </Label>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="incoterm" className="font-medium">Incoterm</Label>
+                          <Select 
+                            value={parcelData.Incoterm} 
+                            onValueChange={(e) => changeParcelDataDropdownHandler(e,"Incoterm")}
+                          >
                             <SelectTrigger className="w-24">
-                              <SelectValue>{parcelData.Currency}</SelectValue>
+                              <SelectValue placeholder="Select" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="GBP">GBP</SelectItem>
-                              <SelectItem value="USD">USD</SelectItem>
-                              <SelectItem value="EUR">EUR</SelectItem>
+                              <SelectItem value="DDU">DDU</SelectItem>
+                              <SelectItem value="DDP">DDP</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                       </div>
-                      <div className="grid gap-2">
-                        <Label>Value of Goods</Label>
-                        <Input type="number" value={parcelData.Value} onChange={ (e)=> changeParcelDataTextboxHandler(e,"Value")}/>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+  
+              {/* Step 2: Addresses */}
+              {activeStep === 1 && (
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Sender Information */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-medium">Sender Information</h3>
+                        <Badge variant="outline" className="bg-blue-50">Saved Address</Badge>
                       </div>
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label>Short Description</Label>
-                      <Textarea value={parcelData.Description} onChange={ (e)=> changeParcelDataTextboxHandler(e,"Description")}/>
-                    </div>                    
-
-                    <div className="grid gap-2">
-                      <Label>Customer ID Reference</Label>
-                      <Input value={parcelData.CustomerReference} onChange={ (e)=> changeParcelDataTextboxHandler(e,"CustomerReference")}/>
-                    </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="senderName">Name</Label>
+                          <Input 
+                            id="senderName" 
+                            value={parcelData.ShipperConfig.ShipperName} 
+                            disabled
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="senderCompany">Company</Label>
+                          <Input 
+                            id="senderCompany" 
+                            value={parcelData.ShipperConfig.AccountCode} 
+                            disabled
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="senderAddress1">Address Line 1</Label>
+                        <Input 
+                          id="senderAddress1" 
+                          value={parcelData.ShipperConfig.Address1} 
+                          disabled
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="senderAddress2">Address Line 2</Label>
+                        <Input 
+                          id="senderAddress2" 
+                          value={parcelData.ShipperConfig.Address2} 
+                          disabled
+                        />
+                      </div>
+  
+                      <div className="space-y-2">
+                        <Label htmlFor="senderAddress3">Address Line 3</Label>
+                        <Input 
+                          id="senderAddress3" 
+                          value={parcelData.ShipperConfig.Address3} 
+                          disabled
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="senderCity">City</Label>
+                          <Input 
+                            id="senderCity" 
+                            value={parcelData.ShipperConfig.City} 
+                            disabled
+                          />
+                        </div>
+  
+                        <div className="space-y-2">
+                        <Label htmlFor="senderState">State</Label>
+                        <Input 
+                          id="senderState" 
+                          value={parcelData.ShipperConfig.State} 
+                          disabled
+                        />
+                      </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="senderZip">Postal Code</Label>
+                          <Input 
+                            id="senderZip" 
+                            value={parcelData.ShipperConfig.Zip} 
+                            disabled
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="senderCountry">Country</Label>
+                        <Input 
+                          id="senderCountry" 
+                          value={parcelData.ShipperConfig.Country === "GB" ? "United Kingdom" : parcelData.ShipperConfig.Country} 
+                          disabled
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="senderPhone">Phone</Label>
+                          <Input 
+                            id="senderPhone" 
+                            value={parcelData.ShipperConfig.Phone} 
+                            disabled
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="senderEmail">Email</Label>
+                          <Input 
+                            id="senderEmail" 
+                            value={parcelData.ShipperConfig.Email} 
+                            disabled
+                          />
+                        </div>
+  
+                        <div className="space-y-2">
+                          <Label htmlFor="sender-vat">VAT</Label>
+                          <Input id="sender-vat" 
+                                 value={parcelData.ShipperConfig.Vat}/>
+                        </div>
+                         <div className="space-y-2">
+                           <Label htmlFor="sender-ioss">IOSS</Label>
+                           <Input id="sender-ioss" 
+                                  value={parcelData.ShipperConfig.Ioss}/>
+                            </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Recipient Information */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <h3 className="text-lg font-medium">Recipient Information</h3>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="recipientName">Name *</Label>
+                          <Input 
+                            id="recipientName" 
+                            value={parcelData.ConsigneeName} 
+                            onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneeName")}
+                            placeholder="Enter recipient name"
+                            required
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="recipientCompany">Company</Label>
+                          <Input 
+                            id="recipientCompany" 
+                            value={parcelData.ConsigneeCompanyName} 
+                            onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneeCompanyName")}
+                            placeholder="Enter company name"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="recipientAddress1">Address Line 1 *</Label>
+                        <Input 
+                          id="recipientAddress1" 
+                          value={parcelData.ConsigneeAddress1} 
+                          onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneeAddress1")}
+                          placeholder="Enter address line 1"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="recipientAddress2">Address Line 2</Label>
+                        <Input 
+                          id="recipientAddress2" 
+                          value={parcelData.ConsigneeAddress2} 
+                          onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneeAddress2")}
+                          placeholder="Enter address line 2"
+                        />
+                      </div>
+  
+                      <div className="space-y-2">
+                        <Label htmlFor="recipientAddress3">Address Line 3</Label>
+                        <Input 
+                          id="recipientAddress3" 
+                          value={parcelData.ConsigneeAddress3} 
+                          onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneeAddress3")}
+                          placeholder="Enter address line 3"
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="recipientCity">City *</Label>
+                          <Input 
+                            id="recipientCity" 
+                            value={parcelData.ConsigneeCity} 
+                            onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneeCity")}
+                            placeholder="Enter city"
+                            required
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="recipientState">State/Region</Label>
+                          <Input 
+                            id="recipientState" 
+                            value={parcelData.ConsigneeState} 
+                            onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneeState")}
+                            placeholder="Enter state/region"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="recipientZip">Postal Code *</Label>
+                          <Input 
+                            id="recipientZip" 
+                            value={parcelData.ConsigneeZip} 
+                            onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneeZip")}
+                            placeholder="Enter postal code"
+                            required
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="recipientCountry">Country *</Label>
+                          <Select 
+                            value={parcelData.ConsigneeCountry} 
+                            onValueChange={(e)=> changeParcelDataDropdownHandler(e,"ConsigneeCountry")}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select country" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="GB">United Kingdom</SelectItem>
+                              <SelectItem value="US">United States</SelectItem>
+                              <SelectItem value="DE">Germany</SelectItem>
+                              <SelectItem value="FR">France</SelectItem>
+                              <SelectItem value="IT">Italy</SelectItem>
+                              <SelectItem value="ES">Spain</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="recipientPhone">Phone *</Label>
+                          <Input 
+                            id="recipientPhone" 
+                            value={parcelData.ConsigneePhone} 
+                            onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneePhone")}
+                            placeholder="Enter phone number"
+                            required
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="recipientEmail">Email</Label>
+                          <Input 
+                            id="recipientEmail" 
+                            value={parcelData.ConsigneeEmail} 
+                            onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneeEmail")}
+                            placeholder="Enter email address"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="dest-id">ID NUMBER</Label>
+                          <Input id="dest-id" 
+                                 value={parcelData.ConsigneeId} 
+                                 onChange={ (e)=> changeParcelDataTextboxHandler(e,"ConsigneeId")}/>
+                         </div>
+                      </div>
+  
+                      <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                                              <Label htmlFor="dest-type">TYPE</Label>
+                                              <Select value={parcelData.Type} onValueChange={(e) => changeParcelDataDropdownHandler(e,"Type")}>
+                                                <SelectTrigger>
+                                                  <SelectValue placeholder="Select type" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                  <SelectItem value="type1">Type 1</SelectItem>
+                                                  {/* Add more types as needed */}
+                                                </SelectContent>
+                                              </Select>
+                                            </div>
+                                            <div className="space-y-2">
+                                              <Label htmlFor="dest-value">VALUE</Label>
+                                              <Input type="number" id="dest-value" value={parcelData.Value} onChange={ (e)=> changeParcelDataTextboxHandler(e,"Value")}/>
+                                            </div>
+                                          </div>
+                                          <div className="space-y-2">
+                                            <Label htmlFor="dest-address-code">ADDRESS CODE</Label>
+                                            <Input id="dest-address-code" value={parcelData.AddressCode} onChange={ (e)=> changeParcelDataTextboxHandler(e,"AddressCode")}/>
+                                          </div>
+                      
+                      
+                     
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+  
+              {activeStep === 2 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-lg font-medium">Parcel Items</h3>
+                        <button 
+                          className="flex items-center gap-1 px-3 py-1 bg-blue-500 text-white rounded-md text-sm"
+                          onClick={addNewParcel}
+                        >
+                          <Plus size={16} /> Add Parcel
+                        </button>
+                      </div>
+                      
+                  {/* Parcel Tabs */}
+                  <div className="mb-6 flex flex-wrap gap-2">
+                    {parcels.map((parcel) => (
+                      <div 
+                        key={parcel.Id} 
+                        className={`relative px-4 py-2 rounded-md cursor-pointer ${
+                          selectedParcelId === parcel.Id 
+                            ? "bg-blue-500 text-white" 
+                            : "bg-gray-100 text-gray-700"
+                        }`}
+                        onClick={() => setSelectedParcelId(parcel.Id)}
+                      >
+                        <span className="mr-4">Parcel #{parcel.Id}</span>
+                        {parcels.length > 1 && (
+                          <button
+                            className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white rounded-full flex items-center justify-center"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteParcel(parcel.Id);
+                            }}
+                          >
+                            <X size={12} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Current Parcel Form */}
+                  {parcels.map((parcel, index) => (
+                    parcel.Id === selectedParcelId && (
+                      <div key={parcel.Id} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Quantity</label>
+                            <input 
+                              type="number" 
+                              name="Quantity" 
+                              className="border rounded-md p-2 w-full" 
+                              value={parcel.Quantity}
+                              onChange={(e) => changeParcelsTextboxHandler(index, e)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Total Value</label>
+                            <input 
+                              type="number" 
+                              name="TotalValue" 
+                              className="border rounded-md p-2 w-full" 
+                              value={parcel.TotalValue}
+                              onChange={(e) => changeParcelsTextboxHandler(index, e)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Currency</label>
+                            <select 
+                              className="border rounded-md p-2 w-full" 
+                              value={parcel.Currency}
+                              onChange={(e) => changeParcelsDropdownHandler(index, e, "Currency")}
+                            >
+                              <option value="GBP">GBP</option>
+                              <option value="USD">USD</option>
+                              <option value="EUR">EUR</option>
+                            </select>
+                          </div>
+                          
+                          <div className="space-y-2">
+                          <label className="text-sm font-medium">Description</label>
+                          <textarea 
+                            name="Description" 
+                            className="border rounded-md p-2 w-full min-h-[80px]" 
+                            value={parcel.Description}
+                            onChange={(e) => changeParcelsTextboxHandler(index, e)}
+                          />
+                        </div>
+  
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Country of Origin</label>
+                            <div className="flex gap-2">                            
+                              <select 
+                                className="border rounded-md p-2 w-full"  
+                                value={parcel.Country}
+                                onChange={(e) => changeParcelsDropdownHandler(index, e, "Country")}
+                              >
+                                <option value="GB">United Kingdom</option>
+                                <option value="US">United States</option>
+                                <option value="DE">Germany</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>                      
+  
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                                <label className="text-sm font-medium">SKU Code</label>
+                                                <Input className="border rounded-md p-2 w-full" name="SkuCode" placeholder="SKU Code" value={parcel.SkuCode} onChange={ (e)=> changeParcelsTextboxHandler(index,e)}/>
+                                              </div>
+                                              <div className="space-y-2">
+                                                <label className="text-sm font-medium">HS Code</label>
+                                                <Input className="border rounded-md p-2 w-full" name="HsCode" placeholder="HS Code" value={parcel.HsCode} onChange={ (e)=> changeParcelsTextboxHandler(index,e)}/>
+                                              </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                          <div className="space-y-2">
+                                            <label className="text-sm font-medium">Import HS Code</label>
+                                            <Input className="border rounded-md p-2 w-full" name="ImportHsCode" placeholder="Import HS Code" value={parcel.ImportHsCode} onChange={ (e)=> changeParcelsTextboxHandler(index,e)}/>
+                                          </div>
+                                          <div className="space-y-2">
+                                            <label className="text-sm font-medium">CPC Code</label>
+                                            <Input className="border rounded-md p-2 w-full" name="CpcCode" placeholder="CPC Code" value={parcel.CpcCode} onChange={ (e)=> changeParcelsTextboxHandler(index,e)}/>
+                                          </div>                                        
+                                        </div>
+                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium">Export HS Code</label>
+                                            <Input className="border rounded-md p-2 w-full" name="ExportHsCode" placeholder="Export HS Code" value={parcel.ExportHsCode} onChange={ (e)=> changeParcelsTextboxHandler(index,e)}/>
+                                          </div>
+                                          <div className="space-y-2">
+                                            <label className="text-sm font-medium">Item URL</label>
+                                            <Input className="border rounded-md p-2 w-full" name="ItemUrl" placeholder="Item URL" value={parcel.ItemUrl} onChange={ (e)=> changeParcelsTextboxHandler(index,e)}/>
+                                          </div>
+                                          <div className="space-y-2">
+                                            <label className="text-sm font-medium">Image URL</label>
+                                            <Input className="border rounded-md p-2 w-full" name="ImageUrl" placeholder="Image URL" value={parcel.ImageUrl} onChange={ (e)=> changeParcelsTextboxHandler(index,e)}/>
+                                          </div>
+                                        </div>
+  
+                      </div>
+                    )
+                  ))}
+                </div>
+              )}
+              
+              {activeStep === 3 && (
+                <div className="text-center p-6">
+                  <h3 className="text-lg font-medium mb-4">Checkout</h3>
+                  <p className="text-gray-600 mb-6">Review your shipping information before completing your order.</p>
+                  <div className="flex flex-col items-center">
+                    <Package size={64} className="text-blue-500 mb-4" />
+                    <button onClick={CreateParcel} className="bg-blue-500 text-white px-6 py-2 rounded-md font-medium hover:bg-blue-600 transition-colors">
+                      Re-Create Order
+                    </button>                  
+                  </div>
+                  <div className="flex flex-col items-center">
+                  <X size={64} className="text-blue-500 mb-4" />
+                      <button  className="bg-blue-500 text-white px-6 py-2 rounded-md font-medium hover:bg-blue-600 transition-colors" onClick={openParcelTable}>
+                         Cancel    
+                    </button>
                   </div>
                 </div>
-
-                <div className="grid gap-2">
-                                  <h3 className="text-lg font-medium mb-4">Options</h3>
-                                  <div className="flex gap-8">
-                                    <div className="flex items-center space-x-2">
-                                      <Checkbox id="dangerous"  onChange={ setDangerousGoods}/>
-                                      <label
-                                        htmlFor="dangerous"
-                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                      >
-                                        Dangerous Goods
-                                      </label>
-                                    </div>                    
-                                    <div className="flex items-center space-x-2">
-                                    <div className="flex gap-4">
-                                      <Select value={parcelData.Incoterm} onValueChange={(e) => changeParcelDataDropdownHandler(e,"Incoterm")}>
-                                        <SelectTrigger className="w-20">
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="DDU">DDU</SelectItem>
-                                          <SelectItem value="DDP">DDP</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                      </div>
-                                      <Label>InQuota</Label>                      
-                                    </div>                    
-                                  </div>
-                                </div>
-              </div>
-        </TabsContent>
-
-        <TabsContent value="parcel">
-        <div className="container mx-auto p-4 max-w-4xl">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="flex items-center gap-2 mb-4">
-          <TabsList>
-            {parcels.map((parcel) => (
-              <TabsTrigger key={parcel.Id} value={parcel.Id.toString()} className="relative">
-                Parcel Item #{parcel.Id}
-                {parcels.length > 1 && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-4 w-4 absolute -top-2 -right-2"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      deleteParcel(parcel.Id)
-                    }}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                )}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          <Button variant="outline" size="icon" onClick={addNewParcel} className="rounded-full">
-            <Plus className="h-4 w-4" />
-          </Button>
+              )}
+           </div>          
+            
+            {/* Navigation buttons */}
+        <div className="flex justify-between">
+          <button
+            onClick={prevStep}
+            disabled={activeStep === 0}
+            className="px-4 py-2 rounded bg-gray-200 text-gray-700 disabled:opacity-50 hover:bg-gray-300"
+          >
+            Previous
+          </button>
+          <button
+            onClick={nextStep}
+            disabled={activeStep === totalSteps - 1}
+            className="px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-50 hover:bg-blue-700"
+          >
+            Next
+          </button>
         </div>
-
-        {parcels.map((parcel, index) => (
-          <TabsContent key={parcel.Id} value={parcel.Id.toString()}>
-            <Card>
-              <CardContent className="space-y-4 pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm">Quantity</label>
-                    <Input name="Quantity"  type="number" placeholder="Quantity" value={parcel.Quantity} onChange={ e=> changeParcelsTextboxHandler(index,e)}/>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm">Currency</label>
-                    <Select value={parcel.Currency} onValueChange={(e) => changeParcelsDropdownHandler(index,e,"Currency")}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="GBP">GBP</SelectItem>
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="EUR">EUR</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm">Total Value</label>
-                    <Input name="TotalValue" type="number" placeholder="Total Value" value={parcel.TotalValue} onChange={ (e)=> changeParcelsTextboxHandler(index,e)}/>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm">Description</label>
-                  <Textarea name="Description" placeholder="Enter description" value={parcel.Description} onChange={ (e)=> changeParcelsTextboxHandler(index,e)}/>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm">Weight</label>
-                    <div className="flex gap-2">
-                      <Input name="Weight" type="number" placeholder="Weight" value={parcel.Weight} onChange={ (e)=> changeParcelsTextboxHandler(index,e)}/>
-                      <Select value={parcel.WeightUnit} onValueChange={(e) => changeParcelsDropdownHandler(index,e, "WeightUnit")}>
-                        <SelectTrigger className="w-24">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="kg">kg</SelectItem>
-                          <SelectItem value="g">g</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm">Length</label>
-                    <Input name="Length" type="number" placeholder="Length" value={parcel.Length} onChange={ (e)=> changeParcelsTextboxHandler(index,e)}/>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm">Width</label>
-                    <Input name="Width" type="number" placeholder="Width" value={parcel.Width} onChange={ (e)=> changeParcelsTextboxHandler(index,e)}/>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm">Height</label>
-                    <Input name="Height" type="number" placeholder="Height" value={parcel.Height} onChange={ (e)=> changeParcelsTextboxHandler(index,e)}/>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm">Dimension Unit</label>
-                    <Select value={parcel.DimensionUnit} onValueChange={(e) => changeParcelsDropdownHandler(index,e,"DimensionUnit")}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="cm">cm</SelectItem>
-                        <SelectItem value="in">in</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm">Country of Origin</label>
-                  <Select value={parcel.Country} onValueChange={(e) => changeParcelsDropdownHandler(index,e,"Country")}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select country" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="GB">United Kingdom</SelectItem>
-                      <SelectItem value="US">United States</SelectItem>
-                      <SelectItem value="DE">Germany</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm">SKU Code</label>
-                    <Input name="SkuCode" placeholder="SKU Code" value={parcel.SkuCode} onChange={ (e)=> changeParcelsTextboxHandler(index,e)}/>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm">HS Code</label>
-                    <Input name="HsCode" placeholder="HS Code" value={parcel.HsCode} onChange={ (e)=> changeParcelsTextboxHandler(index,e)}/>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm">Import HS Code</label>
-                    <Input name="ImportHsCode" placeholder="Import HS Code" value={parcel.ImportHsCode} onChange={ (e)=> changeParcelsTextboxHandler(index,e)}/>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm">CPC Code</label>
-                    <Input name="CpcCode" placeholder="CPC Code" value={parcel.CpcCode} onChange={ (e)=> changeParcelsTextboxHandler(index,e)}/>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm">Export HS Code</label>
-                    <Input name="ExportHsCode" placeholder="Export HS Code" value={parcel.ExportHsCode} onChange={ (e)=> changeParcelsTextboxHandler(index,e)}/>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm">Item URL</label>
-                    <Input name="ItemUrl" placeholder="Item URL" value={parcel.ItemUrl} onChange={ (e)=> changeParcelsTextboxHandler(index,e)}/>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm">Image URL</label>
-                    <Input name="ImageUrl" placeholder="Image URL" value={parcel.ImageUrl} onChange={ (e)=> changeParcelsTextboxHandler(index,e)}/>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        ))}
-      </Tabs>
-
-      
-    </div>
-        </TabsContent>
-      </Tabs>
-    </div>
-          
-          <div className="h-20 flex justify-between p-6 border-t ">
-            <Button variant="outline" onClick={openParcelTable}>
-              CANCEL
-            </Button>
-            <Button onClick={CreateParcel}>Re-Create Parcel</Button>
           </div>
-        </div>
-       
-      </DialogContent>
-    </Dialog>
-  )
+      </div>
+      </div>   
+      
+    )
+  
 }
 
