@@ -1,40 +1,51 @@
-import * as React from 'react';
-import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Package, Settings, HelpCircle, ChevronDown, Menu, LogOut, Upload } from 'lucide-react'
-import {useContext, createContext, useState } from "react"
-import { Button } from "./ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
-import { useAuth } from "./contexts/AuthContext"
-import { useToast } from "./hooks/use-toast"
+import * as React from "react";
+import { Link, useLocation } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Package,
+  Settings,
+  HelpCircle,
+  ChevronDown,
+  Menu,
+  LogOut,
+  Upload,
+  Table2,
+} from "lucide-react";
+import { useContext, createContext, useState } from "react";
+import { Button } from "./ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { useAuth } from "./contexts/AuthContext";
+import { useToast } from "./hooks/use-toast";
 //import { ThemeToggle } from "./ThemeToggle"
-import { cn } from "src/utils"
+import { cn } from "src/utils";
 
 const menuItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/parcels", label: "Parcels", icon: Package },
   { href: "/batches", label: "Batch Upload", icon: Upload },
-]
+  { href: "/STCR", label: "STC Report", icon: Table2 },
+];
 
 export function Sidebar() {
-  const location = useLocation()
-  const [expanded, setExpanded] = useState(true)
-  const { logout } = useAuth()
-  const { toast } = useToast()
+  const location = useLocation();
+  const [expanded, setExpanded] = useState(true);
+  const { logout } = useAuth();
+  const { toast } = useToast();
 
   const handleLogout = () => {
-    logout()
+    logout();
     toast({
       title: "Logged out",
       description: "You have been successfully logged out.",
-    })
-  }
-  
+    });
+  };
+
   return (
     <div className="flex h-screen bg-background">
       <aside
         className={cn(
           "bg-background border-r flex flex-col transition-all duration-300",
-          expanded ? "w-[60px]" : "w-[240px]",
+          expanded ? "w-[60px]" : "w-[240px]"
         )}
       >
         <div className="p-3 flex items-center justify-between border-b h-[60px]">
@@ -46,13 +57,22 @@ export function Sidebar() {
                 </div>
                 <span className="font-semibold text-foreground">Ship Trac</span>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setExpanded(true)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setExpanded(true)}
+              >
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </>
           )}
           {expanded && (
-            <Button variant="ghost" size="icon" className="w-full" onClick={() => setExpanded(false)}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-full"
+              onClick={() => setExpanded(false)}
+            >
               <Menu className="h-4 w-4" />
             </Button>
           )}
@@ -69,7 +89,7 @@ export function Sidebar() {
                   window.location.href === item.href
                     ? "bg-secondary text-secondary-foreground"
                     : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
-                    expanded && "justify-center",
+                  expanded && "justify-center"
                 )}
               >
                 <item.icon className="h-4 w-4" />
@@ -85,7 +105,7 @@ export function Sidebar() {
               to="/settings"
               className={cn(
                 "flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
-                expanded && "justify-center",
+                expanded && "justify-center"
               )}
             >
               <Settings className="h-4 w-4" />
@@ -95,55 +115,63 @@ export function Sidebar() {
               to="/help"
               className={cn(
                 "flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
-                expanded && "justify-center",
+                expanded && "justify-center"
               )}
             >
               <HelpCircle className="h-4 w-4" />
               {!expanded && <span>Help & Center</span>}
             </Link>
           </nav>
-
-          
         </div>
 
-        <div className="p-3">
-          {/* <ThemeToggle /> */}
-        </div>
+        <div className="p-3">{/* <ThemeToggle /> */}</div>
 
         <div className="p-3">
-          <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
+          <Button
+            variant="ghost"
+            className="w-full justify-start"
+            onClick={handleLogout}
+          >
             <LogOut className="h-4 w-4 mr-2" />
             {!expanded && <span>Log out</span>}
           </Button>
         </div>
-      </aside>      
-    </div> 
-  )
+      </aside>
+    </div>
+  );
 }
 
-function NavItem({ to, icon, label, active, isExpanded }: { 
-  to: string
-  icon: React.ReactNode
-  label: string
-  active?: boolean
-  isExpanded: boolean 
+function NavItem({
+  to,
+  icon,
+  label,
+  active,
+  isExpanded,
+}: {
+  to: string;
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+  isExpanded: boolean;
 }) {
   return (
-    
     <Link
       to={to}
       className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors
-        ${active
-          ? 'bg-orange-400 text-white justify-start' 
-          : 'hover:bg-teal-700 justify-center'
+        ${
+          active
+            ? "bg-orange-400 text-white justify-start"
+            : "hover:bg-teal-700 justify-center"
         }`}
     >
-      {icon}      
-      <span  className={`overflow-hidden transition-all ${
-          (isExpanded ? "w-52 ml-3" : "w-0") 
-        }`}>{label}</span>
-      
+      {icon}
+      <span
+        className={`overflow-hidden transition-all ${
+          isExpanded ? "w-52 ml-3" : "w-0"
+        }`}
+      >
+        {label}
+      </span>
     </Link>
-  )
+  );
 }
-
