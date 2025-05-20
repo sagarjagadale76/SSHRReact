@@ -29,6 +29,7 @@
     "clsx": "^2.1.1",
     "cra-template": "1.2.0",
     "date-fns": "^3.6.0",
+    "fork-ts-checker-webpack-plugin": "^9.1.0",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.468.0",
