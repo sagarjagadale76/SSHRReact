@@ -1,7 +1,14 @@
-"use client"
-import * as React from 'react';
-import { TrendingUp } from 'lucide-react'
-import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from "recharts"
+"use client";
+import * as React from "react";
+import { TrendingUp } from "lucide-react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  LabelList,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import {
   Card,
@@ -10,13 +17,13 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "./ui/card"
+} from "./ui/card";
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "./ui/chart"
+} from "./ui/chart";
 
 const chartConfig = {
   created: {
@@ -26,7 +33,10 @@ const chartConfig = {
   label: {
     color: "hsl(var(--background))",
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
+
+const FixedXAxis = XAxis as unknown as React.ComponentType<any>;
+const FixedYAxis = YAxis as unknown as React.ComponentType<any>;
 
 export function ParcelSummary({ data }) {
   return (
@@ -46,16 +56,18 @@ export function ParcelSummary({ data }) {
             }}
           >
             <CartesianGrid horizontal={false} />
-            <YAxis
+            <FixedYAxis
               dataKey="date"
               type="category"
               tickLine={false}
               tickMargin={10}
               axisLine={false}
-              tickFormatter={(value: string | number | Date) => new Date(value).toLocaleDateString()}
+              tickFormatter={(value: string | number | Date) =>
+                new Date(value).toLocaleDateString()
+              }
               hide
             />
-            <XAxis dataKey="created" type="number" hide />
+            <FixedXAxis dataKey="created" type="number" hide />
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent indicator="line" />}
@@ -94,6 +106,5 @@ export function ParcelSummary({ data }) {
         </div>
       </CardFooter>
     </Card>
-  )
+  );
 }
-
