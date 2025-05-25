@@ -22,15 +22,15 @@ import {
 } from "./ui/dropdown-menu"
 
 export function WareHousesTable() {
-  const [rowData, setRowData] = React.useState([])
-  const [totalWareHouse, setTotalWareHouse] = React.useState(0)
-  const [loading, setLoading] = React.useState(false)
-  const [error, setError] = React.useState(null)
-  const [quickFilterText, setQuickFilterText] = React.useState("")
-  const gridRef = React.useRef(null)
+  const [rowData, setRowData] = React.useState([]);
+  const [totalWareHouse, setTotalWareHouse] = React.useState(0);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState(null);
+  const [quickFilterText, setQuickFilterText] = React.useState("");
+  const gridRef = React.useRef(null);
   const [showForm, setShowForm] = React.useState(false);  
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   // Custom grid theme styles
   const gridTheme = {

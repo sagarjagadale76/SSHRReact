@@ -23,11 +23,15 @@ import { useAuth } from './components/contexts/AuthContext';
 
 
 
-function App() {
-  debugger;
+function App() {  
   let pathName = window.location.pathname
 let arr =  pathName.toString().split("/");
-let currentPath = arr[arr.length-1];
+let currentPath = '';
+if (arr.length > 0) {
+  arr = arr.filter((item) => item !== ""); // Remove empty strings
+  currentPath = arr[arr.length - 1]; // Get the last element
+}
+
 
     return ( 
        
@@ -51,7 +55,7 @@ let currentPath = arr[arr.length-1];
               <Route path="/login" element={<LoginForm />} />             
               {/* <Route path="/export" element={<Export />} /> */}              
               <Route path="/reset-password" element={<ResetPasswordForm />} />               
-              <Route path="*" element={<React.Navigate to="/login" />} />              
+              <Route path="*" element={<LoginForm/>} />              
             </Routes>
           </main>
         </div>

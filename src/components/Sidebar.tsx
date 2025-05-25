@@ -44,13 +44,7 @@ const menuItems = [
     label: "Batch Upload",
     icon: Upload,
     submenu: [],
-  },
-  {
-    href: "/shipments",
-    label: "Shipments",
-    icon: Truck,
-    submenu: [],
-  },
+  }
 ]
 
 const settingsItems = [
