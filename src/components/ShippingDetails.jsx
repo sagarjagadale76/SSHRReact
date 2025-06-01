@@ -46,7 +46,14 @@ const GridExample = () => {
   const [batchCount, setBatchCount] = useState(0);
   const myTheme = themeBalham.withParams({ accentColor: 'red' });
   const gridRef = useRef(null);
-  
+  const [showPopup, setShowPopup] = useState(false);
+
+  const handleSuccess = () => {
+    console.log('Upload successful!');
+    // You can add navigation or notification logic here
+  };
+
+
   const isOpen = useRef(false);
         // Row Data: The data to be displayed.
         
@@ -197,42 +204,48 @@ const GridExample = () => {
             flex: 1,
         };
     
-        // Container: Defines the grid's theme & dimensions.
-        return (
-            <div className="p-4">
-                <div className="flex justify-between items-center mb-4">
-        <div>
-          <h1 className="text-2xl font-semibold mb-2">Batches</h1>
-          <p className="text-gray-600">The total Number of batches: {batchCount}</p>
-        </div>
-        <Button className="bg-teal-500 hover:bg-teal-600" onClick={e => {
-                                    debugger;
-                                        navigate('/NewBatch',{ state: batchId });
-                                    }} >
-        NEW BATCH
-        </Button>
-      </div>
-      <div className="ag-theme-quartz" style={{ height: "600px", width: "100%", marginTop:"40px" }} >
-        <AgGridReact
-           ref={gridRef}
-          theme={myTheme}
-          rowData={rowData}
-          columnDefs={colDefs}
-          rowHeight={30}          
-          alwaysShowHorizontalScroll={true}
-          onGridReady = {onGridReady}
-          onCellClicked={onCellClicked}
-          pagination={true}
-          defaultColDef={{
-            resizable: true,            
-          }}
-        />
-      </div>      
-    </div>
-    
-        );
-       
-       };
+      // Container: Defines the grid's theme & dimensions.
+      return (
+          <>
+              <div className="p-4">
+                  <div className="flex justify-between items-center mb-4">
+                      <div>
+                          <h1 className="text-2xl font-semibold mb-2">Batches</h1>
+                          <p className="text-gray-600">The total Number of batches: {batchCount}</p>
+                      </div>
+                      <Button className="bg-teal-500 hover:bg-teal-600" onClick={e => {
+                          setShowPopup(true);
+                      }} >
+                          NEW BATCH
+                      </Button>
+                  </div>
+                  <div className="ag-theme-quartz" style={{ height: "600px", width: "100%", marginTop:"40px" }} >
+                      <AgGridReact
+                          ref={gridRef}
+                          theme={myTheme}
+                          rowData={rowData}
+                          columnDefs={colDefs}
+                          rowHeight={30}          
+                          alwaysShowHorizontalScroll={true}
+                          onGridReady = {onGridReady}
+                          onCellClicked={onCellClicked}
+                          pagination={true}
+                          defaultColDef={{
+                              resizable: true,            
+                          }}
+                      />
+                  </div>      
+              </div>
+
+              <NewBatchPopup
+                  isOpen={showPopup}
+                  onClose={() => setShowPopup(false)}
+                  onSuccess={handleSuccess}
+              />
+          </>
+      );
+     
+     };
 
        
        

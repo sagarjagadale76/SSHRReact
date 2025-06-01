@@ -15,6 +15,8 @@ import {
   Shield,
   FileText,
   Truck,
+  House,
+  Table2,
 } from "lucide-react"
 import { Button } from "./ui/button"
 import { useToast } from "./hooks/use-toast"
@@ -26,52 +28,89 @@ import { signOut } from "aws-amplify/auth"
 import * as React from 'react';
 
 // Define submenu items for each main menu item
-const menuItems = [
+let menuItems = [
   {
     href: "/dashboard",
     label: "Dashboard",
     icon: LayoutDashboard,
     submenu: [], // No submenu for dashboard
+    permissions: "View-Dash",
   },
   {
     href: "/parcels",
     label: "Parcels",
     icon: Package,
     submenu: [],
+    permissions: "View-Parcel"
   },
   {
     href: "/batches",
     label: "Batch Upload",
     icon: Upload,
     submenu: [],
+    permissions: "View-Batch"
+  },
+  {
+    href: "/STCR",
+    label: "Report",
+    icon: Table2 ,
+    submenu: [],
+    permissions: "View-Reports"
   }
+
 ]
 
-const settingsItems = [
+let settingsItems = [
   {
     href: "/settings",
     label: "Settings",
     icon: Settings,
     submenu: [
-      { href: "/settings/warehouse", label: "Warehouse", icon: User }
+      { href: "/settings/warehouse", label: "Warehouse", icon: House, permissions:"Warehouses"},
+      { href: "/settings/manage-access", label: "Manage Access", icon: User, permissions:"UsersManageAccess" }
       
     ],
-  },
-  {
-    href: "/help",
-    label: "Help & Center",
-    icon: HelpCircle,
-    submenu: [{ href: "/help/documentation", label: "Documentation", icon: FileText }],
-  },
+    permissions: "View-Settings"
+  }
 ]
+
+interface User {
+  UserName: string
+  Role: string
+  Permissions: string[]
+}
 
 export function Sidebar() {
   const location = useLocation()
   const [expanded, setExpanded] = React.useState(true)
   const [activeSubmenu, setActiveSubmenu] = React.useState<string | null>(null)
-  const { setUser } = useAuth()
+  const { setUser,user } = useAuth()
   const { toast } = useToast()
   const router = useNavigate()
+  const [userDetail, setUserDetail] = React.useState<User>(null)
+
+  debugger;
+const stored : User = JSON.parse(localStorage.getItem("userdetails"));
+
+  menuItems = menuItems.filter((item) => {
+
+    if (!item.permissions) return true
+    if (!stored || !stored.Permissions) return false
+    return stored.Permissions.includes(item.permissions)
+  });
+
+settingsItems = settingsItems.filter((item) => {
+
+    if (!item.permissions) return true
+    if (!stored || !stored.Permissions) return false
+
+    item.submenu = item.submenu.filter((subItem) => {
+      if (!subItem.permissions) return true
+      if (!stored || !stored.Permissions) return false
+      return stored.Permissions.includes(subItem.permissions)});
+
+    return stored.Permissions.includes(item.permissions) 
+  });
 
   const clearCacheData = () => {
     caches.keys().then((names) => {
@@ -87,6 +126,7 @@ export function Sidebar() {
       router("/login")
       setUser(null)
       clearCacheData()
+      localStorage.clear();
       window.location.reload()
     } catch (error) {
       console.error("Error signing out: ", error)

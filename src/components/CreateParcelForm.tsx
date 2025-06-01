@@ -15,6 +15,7 @@ import { Value } from "@radix-ui/react-select"
 import { Description } from "@radix-ui/react-dialog"
 import { Badge } from "./ui/badge"
 import { Progress } from "./ui/progress"
+import { set } from "date-fns"
 
 interface ParcelItem {
   Id: number
@@ -36,6 +37,12 @@ interface ParcelItem {
   ExportHsCode: string
   ItemUrl: string
   ImageUrl: string
+}
+
+interface User {
+  UserName: string
+  Role: string
+  ShipperAccountCode:string
 }
 
 
@@ -91,19 +98,25 @@ export function CreateParcelForm() {
     Incoterm:"",
     Price:0,
     ShipperConfig: {
-        ShipperName: "",
-        AccountCode: "",
-        Address1: "",
-        Address2: "",
-        Address3: "",
-        City: "",
-        State: "",
-        Zip: "",
-        Country: "",
-        Phone: "",
-        Email: "",
-        Ioss: "",
-        Vat: ""
+                ShipperName: "",
+                Address1: "",
+                Address2: "",
+                Address3: "",
+                City: "",
+                State: "",
+                Zip: "",
+                Country: "",
+                Phone: "",
+                CompanyEmail: "",
+                Vat: "",
+                Eori: "",
+                Ioss: "",
+                Aen: "",
+                Abn: "",
+                Grt: "",
+                TaxId: "",
+                ClientAccountCode: ""
+                
     },
     Items: [
         {
@@ -133,34 +146,44 @@ export function CreateParcelForm() {
 
    const [shipperConfigData, setshipperConfigData] = React.useState({
         ShipperName: "",
-        AccountCode: "",
-        Address1: "",
-        Address2: "",
-        Address3: "",
-        City: "",
-        State: "",
-        Zip: "",
-        Country: "",
-        Phone: "",
-        Email: "",
-        Ioss: "",
-        Vat: ""
+                Address1: "",
+                Address2: "",
+                Address3: "",
+                City: "",
+                State: "",
+                Zip: "",
+                Country: "",
+                Phone: "",
+                CompanyEmail: "",
+                Vat: "",
+                Eori: "",
+                Ioss: "",
+                Aen: "",
+                Abn: "",
+                Grt: "",
+                TaxId: "",
+                ClientAccountCode: ""
    });
 
    const [checked, setChecked] = React.useState(false);
 
+   const loggedInUser : User = JSON.parse(localStorage.getItem("userdetails"));
+
   React.useEffect(() => {
     if (/CreateParcelForm/.test(window.location.href)) {
+      debugger;
       setOpen(true);
-      onLoadParcel();
+      if(loggedInUser.Role === "Shipper"){
+      onLoadParcel(loggedInUser.ShipperAccountCode);
+      }
     }
   }, []);
 
-  const onLoadParcel = React.useCallback(() => {
+  const onLoadParcel = React.useCallback((shipperAccountCode) => {
     debugger;
 
     const shipperConfig= {
-      "ShipperName": location.state.ShipperName
+      "ShipperName": shipperAccountCode
     }
 
     const myJSON = JSON.stringify(shipperConfig);
@@ -178,19 +201,24 @@ export function CreateParcelForm() {
     // Store results in the results array
    
        const results = {
-        ShipperName: response.data.ShipperName,
-        AccountCode: response.data.AccountCode,
-        Address1: response.data.Address1,
-        Address2: response.data.Address2,
-        Address3: response.data.Address3,
-        City: response.data.City,
-        State: response.data.State,
-        Zip: response.data.Zip,
-        Country: response.data.Country,
-        Phone: response.data.Phone,
-        Email: response.data.Email,
-        Ioss: response.data.Ioss,
-        Vat: response.data.Vat
+        ShipperName: response.data.ShipperName ?? "",
+        ClientAccountCode: response.data.ClientAccountCode ?? "",
+        Address1: response.data.Address1 ?? "",
+        Address2: response.data.Address2 ?? "",
+        Address3: response.data.Address3 ?? "",
+        City: response.data.City ?? "",
+        State: response.data.State ?? "",
+        Zip: response.data.Zip ?? "",
+        Country: response.data.Country ?? "",
+        Phone: response.data.Phone ?? "",
+        CompanyEmail: response.data.CompanyEmail ?? response.data.Email ?? "",
+        Vat: response.data.Vat ?? "",
+        Eori: response.data.Eori ?? "",
+        Ioss: response.data.Ioss ?? "",
+        Aen: response.data.Aen ?? "",
+        Abn: response.data.Abn ?? "",
+        Grt: response.data.Grt ?? "",
+        TaxId: response.data.TaxId ?? ""
       };  
 
     setshipperConfigData(results);     
@@ -376,6 +404,23 @@ export function CreateParcelForm() {
       
       setParcelData(result);
     };
+
+    function changeShipperCode(event, name) {
+       
+      const result= {...shipperConfigData};
+      Object.keys(result).forEach(key => {
+        if(key === name){
+          result[key] = event.target.value;
+        }
+      }) 
+      
+      setshipperConfigData(result);
+    };
+
+    function handleBlur(event) {
+      debugger;
+    }
+
 
     // Navigation functions
   const nextStep = () => {
@@ -566,6 +611,7 @@ export function CreateParcelForm() {
                             type="number" 
                             value={parcelData.ShippingCost} 
                             onChange={ (e)=> changeParcelDataTextboxHandler(e,"ShippingCost")}
+                            onBlur={(e) => handleBlur(e)}
                             placeholder="0.00"
                           />
                         </div>
@@ -735,8 +781,9 @@ export function CreateParcelForm() {
                         <Label htmlFor="senderName">Name</Label>
                         <Input 
                           id="senderName" 
-                          value={shipperConfigData.ShipperName} 
-                          disabled
+                          value={shipperConfigData.ClientAccountCode}
+                          onChange={ (e)=> changeShipperCode(e,"ClientAccountCode")} 
+                          
                         />
                       </div>
                       
@@ -744,7 +791,7 @@ export function CreateParcelForm() {
                         <Label htmlFor="senderCompany">Company</Label>
                         <Input 
                           id="senderCompany" 
-                          value={shipperConfigData.AccountCode} 
+                          value={shipperConfigData.ShipperName}
                           disabled
                         />
                       </div>
@@ -782,7 +829,7 @@ export function CreateParcelForm() {
                         <Label htmlFor="senderCity">City</Label>
                         <Input 
                           id="senderCity" 
-                          value={shipperConfigData.City} 
+                          value={shipperConfigData.City}
                           disabled
                         />
                       </div>
@@ -791,7 +838,7 @@ export function CreateParcelForm() {
                       <Label htmlFor="senderState">State</Label>
                       <Input 
                         id="senderState" 
-                        value={shipperConfigData.State} 
+                        value={shipperConfigData.State}
                         disabled
                       />
                     </div>
@@ -829,7 +876,7 @@ export function CreateParcelForm() {
                         <Label htmlFor="senderEmail">Email</Label>
                         <Input 
                           id="senderEmail" 
-                          value={shipperConfigData.Email} 
+                          value={shipperConfigData.CompanyEmail} 
                           disabled
                         />
                       </div>
@@ -837,12 +884,14 @@ export function CreateParcelForm() {
                       <div className="space-y-2">
                         <Label htmlFor="sender-vat">VAT</Label>
                         <Input id="sender-vat" 
-                               value={shipperConfigData.Vat}/>
+                               value={shipperConfigData.Vat}
+                               disabled/>
                       </div>
                        <div className="space-y-2">
                          <Label htmlFor="sender-ioss">IOSS</Label>
                          <Input id="sender-ioss" 
-                                value={shipperConfigData.Ioss}/>
+                                value={shipperConfigData.Ioss}
+                                disabled/>
                           </div>
                     </div>
                   </CardContent>

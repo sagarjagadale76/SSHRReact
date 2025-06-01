@@ -6,6 +6,8 @@ import { getCurrentUser, fetchUserAttributes, fetchAuthSession } from "aws-ampli
 interface User {
   username: string
   name?: string
+  role?: string
+  permissions?: string[]
 }
 
 interface AuthContextType {

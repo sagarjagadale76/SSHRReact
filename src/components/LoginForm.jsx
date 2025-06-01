@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
-import { useNavigate, useLocation, Link } from "react-router-dom"
+import { useState,useCallback } from "react"
+import { useNavigate, useLocation, Link, data } from "react-router-dom"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { signIn } from "aws-amplify/auth"
+import { signIn,signOut } from "aws-amplify/auth"
 import { Loader2, Lock, Mail, AlertCircle } from "lucide-react"
 
 import { Button } from "./ui/button"
@@ -15,6 +15,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from "./ui/alert"
 import { Separator } from "./ui/separator"
 import { useAuth } from "./contexts/auth-context"
+import axios from "axios"
 
 // Form validation schema
 const loginSchema = z.object({
@@ -25,6 +26,13 @@ const loginSchema = z.object({
 export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [userdetails, setUserDetails] = useState({
+    "UserName": "",
+    "Role": "",
+    "Permissions": [""]
+
+  });
+ 
   const navigate = useNavigate()
   const location = useLocation()
   const { setUser } = useAuth()
@@ -40,6 +48,39 @@ export default function LoginForm() {
       password: "",
     },
   })
+
+  const userdetail = useCallback((username) => {
+        const userData = {
+           UserName: username,
+      
+        };
+      debugger;
+      axios(
+        {
+          method: "POST",
+          url: "https://j34183xbc8.execute-api.eu-west-2.amazonaws.com/dev/getSystemUsers",
+          headers: { "x-api-key" : "TYXQrJvtOT1ac268C3eb0962We9XUlJu1Dls8Rvu" },
+          data: userData
+        }            
+    )
+    .then(response => { 
+      debugger;
+      const results = {
+        UserName: response.data[0].UserName,
+        Role: response.data[0].Role,
+        Permissions: response.data[0].UserPermissions.split(","),
+        ShipperAccountCode: response.data[0].ClientNumber || ""
+      };
+      // Store results in the results array
+      
+  
+      setUserDetails(results);
+      localStorage.setItem("userdetails", JSON.stringify(results));    
+          window.location.reload();    
+
+    })
+    
+  });
 
   // Handle form submission
   const onSubmit = async (data) => {
@@ -57,12 +98,13 @@ export default function LoginForm() {
       })
 
       if (isSignedIn) {
+        debugger
+        userdetail(data.username);
         // Update auth context
-        setUser({ username: data.username })
+        setUser({ username: data.username, role: userdetails.Role, permissions: userdetails.Permissions });
         
         // Redirect to dashboard or previous page
-        navigate(from, { replace: true })
-        window.location.reload();
+        navigate(from, { replace: true })        
         
       } else if (nextStep?.signInStep === "CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED") {
         navigate(`/reset-password?username=${encodeURIComponent(data.username)}`)
@@ -87,8 +129,11 @@ export default function LoginForm() {
           default:
             setError(`Login failed: ${err.message}`)
         }
+
+        await signOut();
       } else {
         setError("An unknown error occurred")
+        await signOut();
       }
     } finally {
       setIsLoading(false)

@@ -234,7 +234,7 @@ function downloadFileObject(base64String, name) {
 function openCreateParcelForm()
 {
   
-  navigate("/CreateParcelForm",{ state : {"ShipperName" : user.ShipperName}});
+  navigate("/CreateParcelForm");
 }
 
   return (
