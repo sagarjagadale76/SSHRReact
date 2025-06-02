@@ -645,19 +645,7 @@ const NewBatchPopup = ({ isOpen, onClose, onSuccess }) => {
             </div>
           )}
 
-          {/* Info Panel */}
-          <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <h4 className="font-semibold text-blue-800 mb-2 flex items-center">
-              <span className="mr-2">ℹ️</span>
-              What happens during upload:
-            </h4>
-            <ul className="text-sm text-blue-700 space-y-1">
-              <li>• ShipperAccountCode column added automatically</li>
-              <li>• File uploaded securely to AWS S3</li>
-              <li>• Batch record created for tracking</li>
-              <li>• Processing status will be available</li>
-            </ul>
-          </div>
+          
         </div>
 
         {/* Footer */}
