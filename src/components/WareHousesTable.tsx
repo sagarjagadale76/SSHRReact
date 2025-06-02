@@ -94,6 +94,24 @@ export function WareHousesTable() {
     [fetchData],
   )  
 
+  // Handle quick filter changes
+  const onQuickFilterChanged = React.useCallback((event) => {
+    debugger;
+    const value = event.target.value;
+    setQuickFilterText(value);
+    if (gridRef.current) {
+      gridRef.current.getQuickFilter(value);
+    }
+  }, []);
+
+  // Clear search
+  const clearSearch = React.useCallback(() => {
+    setQuickFilterText("");
+    if (gridRef.current) {
+      gridRef.current.resetQuickFilter("");
+    }
+  }, []);
+
   const editWarehouse = (warehouseId) => {
     navigate("/settings/warehouse/edit",{ state: {"Action": "Edit", "WareHouseId": warehouseId} });
     
@@ -131,7 +149,7 @@ export function WareHousesTable() {
       sortable: true,      
       flex: 1.2,
       minWidth: 220,
-      filter: false,
+      filter: true, // Enable filter for search
       cellRenderer: (params) => (
         <div className="flex items-center gap-3 py-2">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
@@ -148,7 +166,7 @@ export function WareHousesTable() {
       sortable: true,
       flex: 1.5,
       minWidth: 280,
-      filter: false,
+      filter: true, // Enable filter for search
       valueGetter: (params) => {
         return [params.data.Address1, params.data.Address2, params.data.Zip, params.data.Country]
           .filter(Boolean)
@@ -173,7 +191,7 @@ export function WareHousesTable() {
     {
       headerName: "👤 Contact Information",
       sortable: true,
-      filter: false,
+      filter: true, // Enable filter for search
       flex: 1.3,
       minWidth: 260,
       valueGetter: (params) => {
@@ -212,7 +230,7 @@ export function WareHousesTable() {
       headerName: "⏰ Operating Hours",
       field: "WorkingHour",
       sortable: true,
-      filter: false,
+      filter: true, // Enable filter for search
       filterParams: {
         filterOptions: ['contains', 'equals'],
         defaultOption: 'contains',
@@ -309,8 +327,16 @@ export function WareHousesTable() {
                 placeholder="Search warehouses, locations, contacts..."
                 className="pl-10 w-80 border-slate-300 focus:border-blue-500 focus:ring-blue-500 bg-slate-50 focus:bg-white transition-colors"
                 value={quickFilterText}
-                onChange={(e) => setQuickFilterText(e.target.value)}
+                onChange={onQuickFilterChanged}
               />
+              {quickFilterText && (
+                <button
+                  onClick={clearSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  ×
+                </button>
+              )}
             </div>
             <Button 
               variant="outline" 
@@ -344,11 +370,7 @@ export function WareHousesTable() {
                 <DropdownMenuItem onClick={exportCSV} className="hover:bg-green-50 hover:text-green-700">
                   <Download className="h-4 w-4 mr-3" />
                   Export to CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={printGrid} className="hover:bg-blue-50 hover:text-blue-700">
-                  <Printer className="h-4 w-4 mr-3" />
-                  Print Grid
-                </DropdownMenuItem>
+                </DropdownMenuItem>                
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -371,10 +393,11 @@ export function WareHousesTable() {
             animateRows={true}
             rowSelection="multiple"
             suppressCellFocus={true}
+            quickFilterText={quickFilterText} // Added this line to enable quick filter
             defaultColDef={{
               resizable: true,
               sortable: true,
-              filter: false,
+              filter: true, // Changed from false to true to enable filtering
               floatingFilter: false,
               filterParams: {
                 buttons: ['reset', 'apply'],

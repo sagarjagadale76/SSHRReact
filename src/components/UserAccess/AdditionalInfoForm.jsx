@@ -203,7 +203,7 @@ const AdditionalInfoForm = ({ formData, handleInputChange, handleToggleChange, p
             value={formData.WareHouse}
             onChange={handleInputChange}
             className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.WareHouse ? "border-red-500" : "border-gray-300"
+              errors?.WareHouse ? "border-red-500" : "border-gray-300"
             }`}
           >
             <option value="">
@@ -215,7 +215,7 @@ const AdditionalInfoForm = ({ formData, handleInputChange, handleToggleChange, p
                     </option>
                   ))}
           </select>
-          {errors.WareHouse && <p className="mt-1 text-sm text-red-500">{errors.WareHouse}</p>}
+          {errors?.WareHouse && <p className="mt-1 text-sm text-red-500">{errors?.WareHouse}</p>}
         </div>
 
       {/* Basic Configuration */}
@@ -229,10 +229,10 @@ const AdditionalInfoForm = ({ formData, handleInputChange, handleToggleChange, p
             onChange={handleInputChange}
             placeholder="SSN001"
             className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.ClientAccountCode ? "border-red-500" : "border-gray-300"
+                errors?.ClientAccountCode ? "border-red-500" : "border-gray-300"
               }`}
           />
-          {errors.ClientAccountCode && <p className="mt-1 text-sm text-red-500">{errors.ClientAccountCode}</p>}
+          {errors?.ClientAccountCode && <p className="mt-1 text-sm text-red-500">{errors?.ClientAccountCode}</p>}
         </div>
 
         <div>
@@ -295,7 +295,7 @@ const AdditionalInfoForm = ({ formData, handleInputChange, handleToggleChange, p
             value={formData.LabelType}
             onChange={handleInputChange}
             className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.LabelType ? "border-red-500" : "border-gray-300"
+              errors?.LabelType ? "border-red-500" : "border-gray-300"
             }`}
           >
             <option value="">Select Label Type</option>
@@ -305,7 +305,7 @@ const AdditionalInfoForm = ({ formData, handleInputChange, handleToggleChange, p
               </option>
             ))}
           </select>
-          {errors.LabelType && <p className="mt-1 text-sm text-red-500">{errors.LabelType}</p>}
+          {errors?.LabelType && <p className="mt-1 text-sm text-red-500">{errors?.LabelType}</p>}
         </div>
 
         <div>
@@ -315,7 +315,7 @@ const AdditionalInfoForm = ({ formData, handleInputChange, handleToggleChange, p
             value={formData.DimensionUnits}
             onChange={handleInputChange}
             className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.DimensionUnits ? "border-red-500" : "border-gray-300"
+              errors?.DimensionUnits ? "border-red-500" : "border-gray-300"
             }`}
           >
             <option value="">Select Units</option>
@@ -325,7 +325,7 @@ const AdditionalInfoForm = ({ formData, handleInputChange, handleToggleChange, p
               </option>
             ))}
           </select>
-          {errors.DimensionUnits && <p className="mt-1 text-sm text-red-500">{errors.DimensionUnits}</p>}
+          {errors?.DimensionUnits && <p className="mt-1 text-sm text-red-500">{errors?.DimensionUnits}</p>}
         </div>
 
         <div>
@@ -335,7 +335,7 @@ const AdditionalInfoForm = ({ formData, handleInputChange, handleToggleChange, p
             value={formData.WeightUnits}
             onChange={handleInputChange}
             className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.WeightUnits ? "border-red-500" : "border-gray-300"
+              errors?.WeightUnits ? "border-red-500" : "border-gray-300"
             }`}
           >
             <option value="">Select Units</option>
@@ -345,7 +345,7 @@ const AdditionalInfoForm = ({ formData, handleInputChange, handleToggleChange, p
               </option>
             ))}
           </select>
-          {errors.WeightUnits && <p className="mt-1 text-sm text-red-500">{errors.WeightUnits}</p>}
+          {errors?.WeightUnits && <p className="mt-1 text-sm text-red-500">{errors?.WeightUnits}</p>}
         </div>
       </div>
 

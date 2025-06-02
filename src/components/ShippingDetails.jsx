@@ -10,6 +10,7 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import { CgAdd } from "react-icons/cg";
 import { FaDownload } from "react-icons/fa";
 import { FaEye } from "react-icons/fa";
+import { FaSearch, FaSync } from "react-icons/fa";
 //import { createRoot } from 'react-dom/client';
 import  ReactDOM  from "react-dom/client";
 import  "./ShippingDetails.module.css";
@@ -42,11 +43,19 @@ export default class ShippingDetails extends React.Component{
 const GridExample = () => {
   let navigate = useNavigate();
   const [rowData, setRowData] = useState([]);
+  const [filteredRowData, setFilteredRowData] = useState([]);
   const [batchId, setBatchId] = useState(0);
   const [batchCount, setBatchCount] = useState(0);
   const myTheme = themeBalham.withParams({ accentColor: 'red' });
   const gridRef = useRef(null);
   const [showPopup, setShowPopup] = useState(false);
+
+  // Filter states
+  const [filters, setFilters] = useState({
+    createDateFrom: '',
+    createDateTo: '',
+    status: 'All'
+  });
 
   const handleSuccess = () => {
     console.log('Upload successful!');
@@ -54,45 +63,7 @@ const GridExample = () => {
   };
 
 
-  const isOpen = useRef(false);
-        // Row Data: The data to be displayed.
-        
-      // const onGridReady = (params) => {
-      //   debugger;
-      //   const fetchGridData =() => {
-      //     // Fetch data
-            
-      //     axios(
-      //       {
-      //           method: "GET",
-      //           url: "https://35kkdepo1j.execute-api.eu-west-2.amazonaws.com/dev/batches",
-      //           headers: { "x-api-key" : "TYXQrJvtOT1ac268C3eb0962We9XUlJu1Dls8Rvu" }
-      //       }            
-      //   ).then(response => {          
-      //     const results = [];
-      //     const batchIdList = [];          
-      //     // Store results in the results array
-      //     response.data.forEach((value) => {
-      //       batchIdList.push(value.BatchId);
-      //       results.push({
-      //           id: value.BatchId,
-      //           fileName: value.FileName,
-      //           created: value.CreatedDate,
-      //           status: value.Status,
-      //           parcels: value.Parcels,
-      //           user: value.ShipperName,
-      //       });
-      //     }); 
-
-      //     setBatchCount(batchIdList.length);
-      //     setBatchId(Math.max(...batchIdList));
-      //     setRowData(results);                         
-      //   });    
-        
-      // }
-
-      // useEffect(() => {fetchGridData()},[]);        
-      // };
+  const isOpen = useRef(false);        
 
       const onGridReady = useCallback((params) => {
         debugger;
@@ -122,10 +93,55 @@ const GridExample = () => {
 
         setBatchCount(batchIdList.length);
         setBatchId(Math.max(...batchIdList));
-        setRowData(results);                         
+        setRowData(results);
+        setFilteredRowData(results); // Initialize filtered data                        
       });
       }, []);
-    
+
+      // Filter functions
+      const handleFilterChange = (filterType, value) => {
+        setFilters(prev => ({
+          ...prev,
+          [filterType]: value
+        }));
+      };
+
+      const applyFilters = () => {
+        let filtered = [...rowData];
+
+        // Date range filter
+        if (filters.createDateFrom) {
+          const fromDate = new Date(filters.createDateFrom);
+          filtered = filtered.filter(item => {
+            const itemDate = new Date(item.created);
+            return itemDate >= fromDate;
+          });
+        }
+
+        if (filters.createDateTo) {
+          const toDate = new Date(filters.createDateTo);
+          filtered = filtered.filter(item => {
+            const itemDate = new Date(item.created);
+            return itemDate <= toDate;
+          });
+        }
+
+        // Status filter
+        if (filters.status !== 'All') {
+          filtered = filtered.filter(item => item.status === filters.status);
+        }
+
+        setFilteredRowData(filtered);
+      };
+
+      const clearFilters = () => {
+        setFilters({
+          createDateFrom: '',
+          createDateTo: '',
+          status: 'All'
+        });
+        setFilteredRowData(rowData);
+      };
         
       // const viewBatch =(e) => {
       //   debugger;
@@ -159,43 +175,156 @@ const GridExample = () => {
       
         // Column Definitions: Defines the columns to be displayed.
         const [colDefs, setColDefs] = useState([
-            { headerName: "ID", field: "id", width: 80,  sortable:true, filter: true},
+            { 
+              headerName: "📁 Batch Details", 
+              field: "batch",
+              flex: 1,
+              minWidth: 180,
+              sortable: true, 
+              filter: true,
+              cellRenderer: (params) => (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0' }}>
+                  <div style={{
+                    backgroundColor: '#4F80FF',
+                    color: 'white',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+                  }}>
+                    📁
+                  </div>
+                  <span style={{ fontWeight: '500', color: '#333' }}>
+                    Batch {params.data.id}
+                  </span>
+                </div>
+              ),
+            },
             {
-              headerName: "File Name",
+              headerName: "📍 File Information",
               field: "fileName",
+              flex: 2,
+              minWidth: 250,
               cellRenderer: (params) => (
-                <a style={{color:"#00B0B3"}}><FaDownload style={{color:"#00B0B3"}}/>
-                  {params.value}
-                </a>
+                <div style={{ padding: '8px 0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                    <div style={{
+                      backgroundColor: '#FF6B6B',
+                      color: 'white',
+                      padding: '2px 6px',
+                      borderRadius: '50%',
+                      fontSize: '10px',
+                      width: '16px',
+                      height: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      📍
+                    </div>
+                    <div style={{ color: '#333', fontWeight: '500' }}>
+                      {params.value}
+                    </div>
+                  </div>
+                  <div style={{ color: '#666', fontSize: '12px', marginLeft: '22px' }}>
+                    <FaDownload style={{color:"#00B0B3", marginRight: '4px'}} />
+                    Download available
+                  </div>
+                </div>
               ),
             },
-            { headerName: "Created", field: "created", width: 200 },
             {
-              headerName: "Status",
+              headerName: "👤 Processing Info",
+              field: "processing",
+              flex: 2,
+              minWidth: 220,
+              cellRenderer: (params) => (
+                <div style={{ padding: '8px 0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                    <div style={{
+                      backgroundColor: '#9C27B0',
+                      color: 'white',
+                      padding: '2px 6px',
+                      borderRadius: '50%',
+                      fontSize: '10px',
+                      width: '16px',
+                      height: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      👤
+                    </div>
+                    <div style={{ color: '#333', fontWeight: '500' }}>
+                      {params.data.user}
+                    </div>
+                  </div>
+                  <div style={{ color: '#666', fontSize: '12px', marginLeft: '22px' }}>
+                    📞 {params.data.created}
+                  </div>
+                  <div style={{ color: '#00B0B3', fontSize: '12px', marginLeft: '22px' }}>
+                    ✉️ {params.data.user}@company.com
+                  </div>
+                </div>
+              ),
+            },
+            {
+              headerName: "🕒 Status & Schedule",
               field: "status",
-              cellStyle: (params) => ({
-                color: params.value === "Finished" ? "green" : "red",
-                fontWeight: "bold",
-              }),
-            },
-            {
-              headerName: "Parcels",
-              field: "parcels",
-              autoHeight: true,
+              flex: 1.5,
+              minWidth: 200,
               cellRenderer: (params) => (
-                <>
-                  <a style={{color:"#00B0B3"}}>{`${params.value} found`}</a>
-                  <br/>               
-                  <a href="#" style={{color:"#00B0B3",textDecoration:"underline"}}>{`${params.value} created`}</a>                  
-                </>
+                <div style={{ padding: '8px 0' }}>
+                  <div style={{ 
+                    color: params.data.status === "Finished" ? "green" : "red",
+                    fontWeight: "bold",
+                    marginBottom: '4px'
+                  }}>
+                    {params.data.status === "Finished" ? "✅" : "⏳"} {params.data.status.toUpperCase()}
+                  </div>
+                  <div style={{ color: '#666', fontSize: '11px' }}>
+                    📅 Created: {params.data.created}
+                  </div>
+                  <div style={{ color: '#666', fontSize: '11px' }}>
+                    ⚡ Processing Time: Fast
+                  </div>
+                </div>
               ),
             },
-            { headerName: "User", field: "user", width: 200 },
             {
-              headerName: "",
-              field: "details",
-              cellRenderer: () => (
-                <a style={{color:"#00B0B3"}}><FaEye style={{color:"#00B0B3"}} />View details</a>
+              headerName: "⚡ Actions",
+              field: "actions",
+              flex: 0.8,
+              minWidth: 120,
+              maxWidth: 150,
+              cellRenderer: (params) => (
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  height: '100%',
+                  gap: '8px'
+                }}>
+                  <button
+                    onClick={() => onCellClicked({colDef: {field: 'details'}, data: params.data})}
+                    style={{
+                      backgroundColor: '#4F80FF',
+                      color: 'white',
+                      border: 'none',
+                      padding: '6px 12px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                    onMouseOver={(e) => e.target.style.backgroundColor = '#3A6BFF'}
+                    onMouseOut={(e) => e.target.style.backgroundColor = '#4F80FF'}
+                  >
+                    <FaEye size={12} />
+                    View
+                  </button>
+                </div>
               ),
             },        
         ]);  
@@ -207,34 +336,245 @@ const GridExample = () => {
       // Container: Defines the grid's theme & dimensions.
       return (
           <>
-              <div className="p-4">
-                  <div className="flex justify-between items-center mb-4">
-                      <div>
-                          <h1 className="text-2xl font-semibold mb-2">Batches</h1>
-                          <p className="text-gray-600">The total Number of batches: {batchCount}</p>
+              <div style={{ padding: '24px', backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
+                  {/* Header Section - Matching Warehouse Management Style */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '24px',
+                    backgroundColor: 'white',
+                    padding: '20px',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                  }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                          <div style={{
+                            backgroundColor: '#4F80FF',
+                            color: 'white',
+                            padding: '12px',
+                            borderRadius: '8px',
+                            fontSize: '20px'
+                          }}>
+                            📦
+                          </div>
+                          <div>
+                              <h1 style={{ 
+                                fontSize: '24px', 
+                                fontWeight: '600', 
+                                margin: '0 0 4px 0',
+                                color: '#333'
+                              }}>
+                                Batch Management
+                              </h1>
+                              <p style={{ 
+                                color: '#666', 
+                                margin: '0',
+                                fontSize: '14px'
+                              }}>
+                                Managing {batchCount} batches across your network
+                              </p>
+                          </div>
                       </div>
-                      <Button className="bg-teal-500 hover:bg-teal-600" onClick={e => {
-                          setShowPopup(true);
-                      }} >
-                          NEW BATCH
+                      <Button 
+                        style={{
+                          backgroundColor: '#4F80FF',
+                          color: 'white',
+                          border: 'none',
+                          padding: '12px 20px',
+                          borderRadius: '6px',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}
+                        onClick={e => {
+                            setShowPopup(true);
+                        }}
+                        onMouseOver={(e) => e.target.style.backgroundColor = '#3A6BFF'}
+                        onMouseOut={(e) => e.target.style.backgroundColor = '#4F80FF'}
+                      >
+                          ➕ Add New Batch
                       </Button>
                   </div>
-                  <div className="ag-theme-quartz" style={{ height: "600px", width: "100%", marginTop:"40px" }} >
-                      <AgGridReact
-                          ref={gridRef}
-                          theme={myTheme}
-                          rowData={rowData}
-                          columnDefs={colDefs}
-                          rowHeight={30}          
-                          alwaysShowHorizontalScroll={true}
-                          onGridReady = {onGridReady}
-                          onCellClicked={onCellClicked}
-                          pagination={true}
-                          defaultColDef={{
-                              resizable: true,            
+
+                  {/* Filter Section */}
+                  <div style={{
+                    backgroundColor: 'white',
+                    padding: '20px',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                    marginBottom: '16px'
+                  }}>
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: '1fr 1fr 1fr auto auto',
+                      gap: '16px',
+                      alignItems: 'end'
+                    }}>
+                      <div>
+                        <label style={{ 
+                          display: 'block', 
+                          marginBottom: '4px', 
+                          fontSize: '12px', 
+                          fontWeight: '600',
+                          color: '#666',
+                          textTransform: 'uppercase'
+                        }}>
+                          CREATE DATE FROM
+                        </label>
+                        <input
+                          type="date"
+                          value={filters.createDateFrom}
+                          onChange={(e) => handleFilterChange('createDateFrom', e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '8px 12px',
+                            border: '1px solid #ddd',
+                            borderRadius: '4px',
+                            fontSize: '14px',
+                            backgroundColor: '#f8f9fa'
                           }}
-                      />
-                  </div>      
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ 
+                          display: 'block', 
+                          marginBottom: '4px', 
+                          fontSize: '12px', 
+                          fontWeight: '600',
+                          color: '#666',
+                          textTransform: 'uppercase'
+                        }}>
+                          CREATE DATE TO
+                        </label>
+                        <input
+                          type="date"
+                          value={filters.createDateTo}
+                          onChange={(e) => handleFilterChange('createDateTo', e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '8px 12px',
+                            border: '1px solid #ddd',
+                            borderRadius: '4px',
+                            fontSize: '14px',
+                            backgroundColor: '#f8f9fa'
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ 
+                          display: 'block', 
+                          marginBottom: '4px', 
+                          fontSize: '12px', 
+                          fontWeight: '600',
+                          color: '#666',
+                          textTransform: 'uppercase'
+                        }}>
+                          STATUS
+                        </label>
+                        <select
+                          value={filters.status}
+                          onChange={(e) => handleFilterChange('status', e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '8px 12px',
+                            border: '1px solid #ddd',
+                            borderRadius: '4px',
+                            fontSize: '14px',
+                            backgroundColor: '#f8f9fa'
+                          }}
+                        >
+                          <option value="All">All</option>
+                          <option value="Finished">Finished</option>
+                          <option value="Processing">Processing</option>
+                          <option value="Failed">Failed</option>
+                          <option value="Pending">Pending</option>
+                        </select>
+                      </div>
+
+                      <button
+                        onClick={clearFilters}
+                        style={{
+                          backgroundColor: '#17a2b8',
+                          color: 'white',
+                          border: 'none',
+                          padding: '10px 16px',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          textTransform: 'uppercase'
+                        }}
+                        onMouseOver={(e) => e.target.style.backgroundColor = '#138496'}
+                        onMouseOut={(e) => e.target.style.backgroundColor = '#17a2b8'}
+                      >
+                        Clear Filter
+                      </button>
+
+                      <button
+                        onClick={applyFilters}
+                        style={{
+                          backgroundColor: '#17a2b8',
+                          color: 'white',
+                          border: 'none',
+                          padding: '10px 16px',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          textTransform: 'uppercase'
+                        }}
+                        onMouseOver={(e) => e.target.style.backgroundColor = '#138496'}
+                        onMouseOut={(e) => e.target.style.backgroundColor = '#17a2b8'}
+                      >
+                        Apply Filter
+                      </button>
+                    </div>
+                  </div>
+                  
+
+                  {/* Main Grid Container */}
+                  <div style={{
+                    backgroundColor: 'white',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                    width: '100%',
+                    minWidth: '1000px'
+                  }}>
+                      <div className="ag-theme-quartz" style={{ 
+                        height: "500px", 
+                        width: "100%",
+                        minWidth: '100%'
+                      }}>
+                          <AgGridReact
+                              ref={gridRef}
+                              theme={myTheme}
+                              rowData={filteredRowData}
+                              columnDefs={colDefs}
+                              rowHeight={80}          
+                              alwaysShowHorizontalScroll={false}
+                              onGridReady = {onGridReady}
+                              onCellClicked={onCellClicked}
+                              pagination={true}
+                              paginationPageSize={10}
+                              defaultColDef={{
+                                  resizable: true,
+                                  flex: 1,
+                                  minWidth: 150
+                              }}
+                              headerHeight={50}
+                              suppressRowHoverHighlight={false}
+                              suppressHorizontalScroll={false}
+                              domLayout={'normal'}
+                          />
+                      </div>
+                  </div>
               </div>
 
               <NewBatchPopup
@@ -246,9 +586,3 @@ const GridExample = () => {
       );
      
      };
-
-       
-       
-       
-    
-

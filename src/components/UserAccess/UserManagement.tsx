@@ -130,7 +130,7 @@ interface User {
   Id: number
   IsActive: boolean
   Role: string
-  Email: string
+  UserName: string
   FullName: string
   Permissions: string[]
   CreatedDate: string
@@ -170,7 +170,7 @@ export function UserManagement() {
           }            
       )
       .then(response => { 
-        debugger;
+        
         const results = [];
         // Store results in the results array
         response.data.map((value) => {
@@ -369,6 +369,7 @@ export function UserManagement() {
 
   // Filter users based on current filters (AG-Grid would normally handle this)
   const filteredUsers = React.useMemo(() => {
+    debugger;
     return users.filter((user) => {
       const activeMatch =
         filters.active === "all" ||
@@ -380,7 +381,7 @@ export function UserManagement() {
       const searchMatch =
         filters.search === "" ||        
         user.FullName.toLowerCase().includes(filters.search.toLowerCase()) ||
-        user.Email.toLowerCase().includes(filters.search.toLowerCase())
+        user.UserName.toLowerCase().includes(filters.search.toLowerCase())
 
       return activeMatch && roleMatch && searchMatch
     })

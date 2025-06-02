@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table"
-import { FileText, MapPin, Truck, Download, Printer } from 'lucide-react'
+import { FileText, MapPin, Truck, Download, Printer, Package, User, Clock, Edit, Search, RefreshCw, Filter } from 'lucide-react'
 import * as React from 'react';
 
 import axios from "axios";
@@ -17,7 +17,7 @@ import { AgGridReact } from 'ag-grid-react'; // React Data Grid Component
 //import "ag-grid-community/styles/ag-grid.css"; // Mandatory CSS required by the Data Grid
 import "ag-grid-community/styles/ag-theme-quartz.css"; // Optional Theme applied to the Data Grid
 import "ag-grid-community/styles/ag-theme-alpine.css";
-import { AllCommunityModule, ClientSideRowModelModule,provideGlobalGridOptions, themeBalham  } from "ag-grid-community";
+import { themeBalham  } from "ag-grid-community";
 import { useAuth } from './contexts/AuthContext'
 
 export function ParcelsTable() {
@@ -27,6 +27,23 @@ export function ParcelsTable() {
   const myTheme = themeBalham.withParams({ accentColor: 'red' });
   let navigate = useNavigate();
   const { user } = useAuth();
+
+   // Custom grid theme styles - Updated to match warehouse style
+  const gridTheme = {
+    '--ag-background-color': '#ffffff',
+    '--ag-header-background-color': '#f8fafc',
+    '--ag-header-foreground-color': '#1e293b',
+    '--ag-odd-row-background-color': '#fafafa',
+    '--ag-row-hover-color': '#f1f5f9',
+    '--ag-selected-row-background-color': '#e0f2fe',
+    '--ag-border-color': '#e2e8f0',
+    '--ag-header-height': '48px',
+    '--ag-row-height': '80px',
+    '--ag-font-family': 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    '--ag-font-size': '14px',
+    '--ag-header-font-size': '14px',
+    '--ag-header-font-weight': '600',
+  }
   
   const onGridReady = React.useCallback((params) =>  {    
    
@@ -66,103 +83,126 @@ export function ParcelsTable() {
   });
   }, []);
 
-   // Column Definitions: Defines the columns to be displayed.
+   // Column Definitions: Updated to match warehouse style
    const [colDefs, setColDefs] = React.useState([
     { 
-      headerName: "Labels",
+      headerName: "📦 Labels",
+      sortable: true,      
+      flex: 1.2,
+      minWidth: 220,
       cellRenderer: (params) => (
-        
-        <div className="space-y-4">
-                      <div>System label</div>
-                      <div className="flex gap-2 text-sm">
-                        <Link to="#" onClick={() => onDownloadPdf(params.data.ZplLabel, params.data.ConsigneeName)} className="text-[#4AA3BA] hover:underline flex items-center gap-1">
-                          <FileText className="h-4 w-4" />
-                          PDF
-                        </Link>
-                        {" | "}
-                        
-                          <Link to="#" onClick={() => downloadFile(params.data.ZplLabel,'text/plain','label.zpl')} className="text-[#4AA3BA] hover:underline">
-                            ZPL
-                          </Link>
-                        
-                      </div>
+        <div className="flex items-center gap-3 py-2">
+          <div className="flex-shrink-0 w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+            <Package className="h-5 w-5 text-white" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="font-medium text-gray-900 mb-1">System label</div>
+            <div className="flex gap-2 text-sm">
+              <button onClick={() => onDownloadPdf(params.data.ZplLabel, params.data.ConsigneeName)} className="text-[#4AA3BA] hover:underline flex items-center gap-1">
+                <FileText className="h-4 w-4" />
+                PDF
+              </button>
+              {" | "}
+              <button onClick={() => downloadFile(params.data.ZplLabel,'text/plain','label.zpl')} className="text-[#4AA3BA] hover:underline">
+                ZPL
+              </button>
             </div>
+          </div>
+        </div>
       ),
     },
     {
-      headerName: "Created/Accepted",
+      headerName: "🕒 Created/Accepted",
       sortable:true,
+      flex: 1.5,
+      minWidth: 280,
       cellRenderer: (params) => (
-        <div>
-        <div>09:45 (UTC)</div>
-        <div className="text-muted-foreground">19 Dec 2024</div>
+        <div className="flex items-center gap-2 py-2">
+          <Clock className="h-4 w-4 text-blue-500 flex-shrink-0" />
+          <div>
+            <div className="font-medium text-gray-900">09:45 (UTC)</div>
+            <div className="text-sm text-gray-500">19 Dec 2024</div>
+          </div>
         </div>
       )
     },
     { 
-      headerName: "Reference/Tracking", 
+      headerName: "📋 Reference/Tracking", 
       cellRenderer: (params) => (
-        <div className="space-y-2">
-                      
-                      <Link to="/ParcelForm" state={{ CustomerReference: params.data.CustomerReference}} className="text-[#4AA3BA] hover:underline flex items-center gap-1" >
-                        <FileText className="h-4 w-4" />
-                        Details
-                      </Link>
-                     
-                      <div className="space-y-1">                        
-                        <div>
-                          <span className="font-medium">System#:</span> {params.data.TrackingNumber}
-                        </div>
-                        <div>
-                          <span className="font-medium">Customer#:</span> {params.data.CustomerReference}
-                        </div>
-                        <div className="flex items-start gap-1">
-                          <span className="font-medium">Order#:</span>
-                          <span>{params.data.OrderReference}</span>                          
-                        </div>
-                      </div>
-                    </div>
+        <div className="py-2">
+          <div className="mb-2">
+            <button onClick={() => navigate("/ParcelForm", { state: { CustomerReference: params.data.CustomerReference}})} className="text-[#4AA3BA] hover:underline flex items-center gap-1 font-medium" >
+              <FileText className="h-4 w-4" />
+              Details
+            </button>
+          </div>
+          <div className="space-y-1 text-sm">                        
+            <div>
+              <span className="font-medium text-gray-700">System#:</span> 
+              <span className="text-gray-900 ml-1">{params.data.TrackingNumber}</span>
+            </div>
+            <div>
+              <span className="font-medium text-gray-700">Customer#:</span> 
+              <span className="text-gray-900 ml-1">{params.data.CustomerReference}</span>
+            </div>
+            <div className="flex items-start gap-1">
+              <span className="font-medium text-gray-700">Order#:</span>
+              <span className="text-gray-900">{params.data.OrderReference}</span>                          
+            </div>
+          </div>
+        </div>
       ),
-      autoHeight: true  },
+      autoHeight: true  
+    },
     {
-      headerName: "Consignee information",
+      headerName: "👤 Consignee information",
       cellRenderer: (params) => (
-        <div>
-        <div>{params.data.ConsigneeName}</div>
-                    <div>{params.data.ConsigneeAddress1 + ',' + params.data.ConsigneeAddress2}</div>
-                    <div>{params.data.Zip}</div>
-                    <div>{params.data.ConsigneeCountry}</div>  
+        <div className="py-2">
+          <div className="flex items-center gap-2 mb-1">
+            <User className="h-4 w-4 text-purple-500" />
+            <span className="font-medium text-gray-900">{params.data.ConsigneeName}</span>
+          </div>
+          <div className="text-sm text-gray-500 ml-6">
+            <div>{params.data.ConsigneeAddress1 + ',' + params.data.ConsigneeAddress2}</div>
+            <div>{params.data.Zip}</div>
+            <div>{params.data.ConsigneeCountry}</div>  
+          </div>
         </div>
       )
     },
     {
-      headerName: " Service",
+      headerName: "🚚 Service",
       autoHeight: true,
       cellRenderer: (params) => (
-        <>
-          <div>{params.data.ServiceName}</div>
-          <div className="text-muted-foreground">({params.data.ServiceId})</div>                  
-        </>
+        <div className="flex items-center gap-2 py-2">
+          <Truck className="h-4 w-4 text-green-500 flex-shrink-0" />
+          <div>
+            <div className="font-medium text-gray-900">{params.data.ServiceName}</div>
+            <div className="text-sm text-gray-500">({params.data.ServiceId})</div>                  
+          </div>
+        </div>
       ),
     },
     { 
-      headerName: "Status",
+      headerName: "📊 Status",
       cellRenderer: (params) => (
-        <>
+        <div className="py-2">
           <span className="inline-flex items-center rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-600 ring-1 ring-inset ring-orange-500/10">
-                    Created
-                    </span>                 
-        </>
+            Created
+          </span>                 
+        </div>
       ),  
       width: 200 
     },
     {
-      headerName: " Source",
+      headerName: "📁 Source",
       cellRenderer: (params) => (
-        <>
-          BatchId: {params.data.BatchId}
-        </>
-        
+        <div className="py-2">
+          <div className="text-sm">
+            <span className="font-medium text-gray-700">BatchId:</span>
+            <span className="text-gray-900 ml-1">{params.data.BatchId}</span>
+          </div>
+        </div>
       ),
     },        
 ]);
@@ -181,10 +221,7 @@ const downloadFile = (zplContent, mediatype, linkToDownload) => {
   URL.revokeObjectURL(url)
 }
 
-const openParcelForm =()=>{
-  debugger;
-  navigate("/ParcelForm");
-}
+
 
 
 const onDownloadPdf = React.useCallback((shippingLabelPDF, consigneeName) =>  {
@@ -238,35 +275,52 @@ function openCreateParcelForm()
 }
 
   return (
-    <div className="p-4">
-    <div className="flex justify-between items-center">
-      <div>
-        <h1 className="text-2xl font-semibold">Parcels list</h1>
-        <p className="text-muted-foreground">The total number of parcels: {totalParcel}</p>
-      </div>
-      <Button className="bg-[#4AA3BA] hover:bg-[#3A8296]" onClick={openCreateParcelForm}>
-        CREATE NEW PARCEL
-      </Button>
-    </div>
+     <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Header - Updated to match warehouse style */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+            <Package className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Parcels list</h1>
+            <p className="text-gray-600">The total number of parcels: {totalParcel}</p>
+          </div>
+        </div>
+        <Button 
+          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium" 
+          onClick={openCreateParcelForm}
+        >
+          + CREATE NEW PARCEL
+        </Button>
+      </div>      
 
-    <div className="space-y-4">
-      <Button variant="outline">ACTION</Button>
-      <div className="ag-theme-quartz" style={{ height: "600px", width: "100%", marginTop:"40px" }} >
-        <AgGridReact
-          theme={myTheme}
-          rowData={rowData}
-          columnDefs={colDefs}
-          rowHeight={30}          
-          alwaysShowHorizontalScroll={true}
-          onGridReady = {onGridReady}
-          pagination={true}
-          paginationAutoPageSize={true}
-          defaultColDef={{
-            resizable: true,            
-          }}
-        />
-      </div>
-      
+      {/* Grid Container - Updated styling */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        
+
+        <div className="space-y-4 p-4">
+          <Button variant="outline">ACTION</Button>
+          <div 
+              className="ag-theme-alpine rounded-xl border border-slate-200 shadow-lg overflow-hidden" 
+              style={{ height: "650px", width: "100%", ...gridTheme }}
+            >
+            <AgGridReact
+              theme={myTheme}
+              rowData={rowData}
+              columnDefs={colDefs}
+              rowHeight={80}
+              headerHeight={48}
+              alwaysShowHorizontalScroll={true}
+              onGridReady = {onGridReady}
+              pagination={true}
+              paginationAutoPageSize={true}
+              defaultColDef={{
+                resizable: true,            
+              }}
+            />
+          </div>
+        </div>
       </div>
     </div>
   )
