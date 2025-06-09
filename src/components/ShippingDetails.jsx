@@ -2,7 +2,7 @@ import { AllCommunityModule, ClientSideRowModelModule,provideGlobalGridOptions, 
 // Theme
 import { ModuleRegistry } from "ag-grid-community";
 //import { AgGridReact } from '@ag-grid-community/react';
-import React, { Component, useState,useCallback,useRef } from "react";
+import React, { Component, useState,useCallback,useRef,useEffect } from "react";
 import { AgGridReact } from 'ag-grid-react'; // React Data Grid Component
 //import "ag-grid-community/styles/ag-grid.css"; // Mandatory CSS required by the Data Grid
 import "ag-grid-community/styles/ag-theme-quartz.css"; // Optional Theme applied to the Data Grid
@@ -22,6 +22,8 @@ import { Button } from "./ui/button"
 
 
 ModuleRegistry.registerModules([AllCommunityModule, ClientSideRowModelModule]);
+
+
 
 //const root = ReactDOM.createRoot(document.getElementById("root"));
 
@@ -49,12 +51,23 @@ const GridExample = () => {
   const myTheme = themeBalham.withParams({ accentColor: 'red' });
   const gridRef = useRef(null);
   const [showPopup, setShowPopup] = useState(false);
+  const[user,setUser] = useState(JSON.parse(localStorage.getItem("userdetails")));
+  const[batchRequest,setBatchRequest] = useState({
+    "ShipperAccountCode": user && user.Role === "Shipper" ? user?.ShipperAccountCode : "",
+    "BatchId": null,
+    "CreatedFrom": "",
+    "CreatedTo": "",
+    "Status": ""
+  })
+  
+
+  
 
   // Filter states
   const [filters, setFilters] = useState({
     createDateFrom: '',
     createDateTo: '',
-    status: 'All'
+    status: ''
   });
 
   const handleSuccess = () => {
@@ -65,13 +78,15 @@ const GridExample = () => {
 
   const isOpen = useRef(false);        
 
-      const onGridReady = useCallback((params) => {
-        debugger;
+      const onGridReady = useCallback((batchRequest) => {
+        debugger;       
+
         axios(
           {
-              method: "GET",
-              url: "https://35kkdepo1j.execute-api.eu-west-2.amazonaws.com/dev/batches",
-              headers: { "x-api-key" : "TYXQrJvtOT1ac268C3eb0962We9XUlJu1Dls8Rvu" }
+              method: "POST",
+              url: "https://35kkdepo1j.execute-api.eu-west-2.amazonaws.com/dev/getBatches",
+              headers: { "x-api-key" : "TYXQrJvtOT1ac268C3eb0962We9XUlJu1Dls8Rvu" },
+              data: batchRequest,
           }            
       )
       .then(response => { 
@@ -107,31 +122,23 @@ const GridExample = () => {
       };
 
       const applyFilters = () => {
-        let filtered = [...rowData];
 
-        // Date range filter
-        if (filters.createDateFrom) {
-          const fromDate = new Date(filters.createDateFrom);
-          filtered = filtered.filter(item => {
-            const itemDate = new Date(item.created);
-            return itemDate >= fromDate;
-          });
-        }
+        var filteredBatchRequet = { ...batchRequest };
 
-        if (filters.createDateTo) {
-          const toDate = new Date(filters.createDateTo);
-          filtered = filtered.filter(item => {
-            const itemDate = new Date(item.created);
-            return itemDate <= toDate;
-          });
-        }
+        if( filters.createDateFrom !== '' &&
+            filters.createDateTo !== '')
+            {
+              filteredBatchRequet.CreatedFrom = filters.createDateFrom;
+              filteredBatchRequet.CreatedTo = filters.createDateTo;
+            }
 
-        // Status filter
-        if (filters.status !== 'All') {
-          filtered = filtered.filter(item => item.status === filters.status);
-        }
+            if(filters.status !== '') {
+              filteredBatchRequet.Status = filters.status;
+            }
 
-        setFilteredRowData(filtered);
+            setBatchRequest(filteredBatchRequet);
+
+            onGridReady(filteredBatchRequet);        
       };
 
       const clearFilters = () => {
@@ -559,7 +566,7 @@ const GridExample = () => {
                               columnDefs={colDefs}
                               rowHeight={80}          
                               alwaysShowHorizontalScroll={false}
-                              onGridReady = {onGridReady}
+                              onGridReady = {params => onGridReady(batchRequest)}
                               onCellClicked={onCellClicked}
                               pagination={true}
                               paginationPageSize={10}

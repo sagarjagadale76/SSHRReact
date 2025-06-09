@@ -21,22 +21,29 @@ const NewBatchPopup = ({ isOpen, onClose, onSuccess }) => {
   const [uploadStatus, setUploadStatus] = useState('');
   const [error, setError] = useState('');
   const [showPreview, setShowPreview] = useState(false);
+  const[user,setUser] = useState(JSON.parse(localStorage.getItem("userdetails")));
   
   const fileInputRef = useRef(null);
+  const shipperAccountCode= user && user.Role === "Shipper" ? user.ShipperAccountCode : "";
 
   // Mock shipper data - replace with your actual API call
   useEffect(() => {
     if (isOpen) {
-      fetchShippers();
+      
+      fetchShippers(shipperAccountCode);
+
+      if(shipperAccountCode){
+        setSelectedShipper(shipperAccountCode);
+      }
     }
   }, [isOpen]);
 
-  const fetchShippers = async () => {
+  const fetchShippers = async (shipperAccountCode) => {
     try {
       axios(
         {
             method: "GET",
-            url: "https://7uwv62mcpb.execute-api.eu-west-2.amazonaws.com/dev/shipperconfig",
+            url: "https://7uwv62mcpb.execute-api.eu-west-2.amazonaws.com/dev/shipperconfig?shipperAccountCode=" + shipperAccountCode,
             headers: { "x-api-key" : "TYXQrJvtOT1ac268C3eb0962We9XUlJu1Dls8Rvu" }
         }            
     ).then(response => {
@@ -515,7 +522,7 @@ const NewBatchPopup = ({ isOpen, onClose, onSuccess }) => {
                 value={selectedShipper}
                 onChange={(e) =>  handleShipper(e)}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                disabled={isUploading}
+                disabled={isUploading || (user && user.Role === "Shipper")}
               >
                 <option value="">Choose a shipper...</option>
                 {shippers.map((shipper) => (
@@ -605,16 +612,7 @@ const NewBatchPopup = ({ isOpen, onClose, onSuccess }) => {
                             {cell || ''}
                           </td>
                         ))}
-                        {rowIndex === 0 && (
-                          <td className="px-3 py-2 border-b font-semibold text-blue-600 bg-blue-50 whitespace-nowrap">
-                            ShipperAccountCode
-                          </td>
-                        )}
-                        {rowIndex > 0 && (
-                          <td className="px-3 py-2 border-b text-gray-500 bg-blue-50 whitespace-nowrap">
-                            {selectedShipper ? shippers.find(s => s.ShipperAccountCode === selectedShipper)?.ShipperAccountCode : 'Select shipper first'}
-                          </td>
-                        )}
+                        
                       </tr>
                     ))}
                   </tbody>

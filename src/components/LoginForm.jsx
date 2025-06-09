@@ -64,12 +64,11 @@ export default function LoginForm() {
         }            
     )
     .then(response => { 
-      debugger;
       const results = {
         UserName: response.data[0].UserName,
         Role: response.data[0].Role,
         Permissions: response.data[0].UserPermissions.split(","),
-        ShipperAccountCode: response.data[0].ClientNumber || ""
+        ShipperAccountCode: response.data[0].ShipperAccountCode || ""
       };
       // Store results in the results array
       

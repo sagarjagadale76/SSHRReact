@@ -64,167 +64,164 @@ export function CreateParcelForm() {
   const [parcelData, setParcelData] = React.useState({
  
     ServiceId: "",
-    LabelFormat: "",
-    Currency: "",
-    OrderReference: "",
-    CodAmount: 0,
-    Weight: 0,
-    WeightUnit: "",
-    Length: 0,
-    Width: 0,
-    Height: 0,
-    DimensionUnit: "",
-    ShippingCost: 0,
-    ValueOfGoods: 0,
-    Description: "",
-    CustomerReference: "",
-    DangerousGoods: false,
-    ConsigneeName: "",
-    ConsigneeCompanyName: "",
-    ConsigneeAddress1: "",
-    ConsigneeAddress2: "",
-    ConsigneeAddress3: "",
-    ConsigneeCity: "",
-    ConsigneeState: "",
-    ConsigneeZip: "",
-    ConsigneeCountry: "",
-    ConsigneePhone: "",
-    ConsigneeEmail: "",
-    ConsigneeId: "",
-    Eori: "",    
-    Type: "",
-    Value: 0,
-    AddressCode:"",
-    Incoterm:"",
-    Price:0,
-    ShipperConfig: {
-                ShipperName: "",
-                Address1: "",
-                Address2: "",
-                Address3: "",
-                City: "",
-                State: "",
-                Zip: "",
-                Country: "",
-                Phone: "",
-                CompanyEmail: "",
-                Vat: "",
-                Eori: "",
-                Ioss: "",
-                Aen: "",
-                Abn: "",
-                Grt: "",
-                TaxId: "",
-                ClientAccountCode: ""
-                
-    },
-    Items: [
-        {
-          Id: 0,
-          Quantity: 0,
-          Currency: "",
-          TotalValue:0,
-          Description: "",
-          Weight: 0,
-          WeightUnit: "",
-          Length: 0,
-          Width: 0,
-          Height: 0,
-          DimensionUnit: "",
-          Country: "",
-          SkuCode: "",
-          HsCode: "",
-          ImportHsCode: "",
-          CpcCode: "",
-          ExportHsCode: "",
-          ItemUrl: "",
-          ImageUrl: "",
-        }
-    ]
+      LabelFormat: "",
+      Currency: "",
+      OrderReference: "",
+      CodAmount: 0,
+      Weight: 0,
+      WeightUnit: "",
+      Length: 0,
+      Width: 0,
+      Height: 0,
+      DimensionUnit: "",
+      ShippingCost: 0,
+      ValueOfGoods: 0,
+      Description: "",
+      CustomerReference: "",
+      DangerousGoods: false,
+      ConsigneeName: "",
+      ConsigneeCompanyName: "",
+      ConsigneeAddress1: "",
+      ConsigneeAddress2: "",
+      ConsigneeAddress3: "",
+      ConsigneeCity: "",
+      ConsigneeState: "",
+      ConsigneeZip: "",
+      ConsigneeCountry: "",
+      ConsigneePhone: "",
+      ConsigneeEmail: "",
+      ConsigneeId: "",
+      Eori: "",    
+      Type: "",
+      Value: 0,
+      AddressCode:"",
+      Incoterm:"",
+      TrackingNumber:"",
+      Price:0,
+      ShipperAccountCode:"",
+      Items: [
+          {
+            Id: 0,
+            Quantity: 0,
+            Currency: "",
+            TotalValue:0,
+            Description: "",
+            Weight: 0,
+            WeightUnit: "",
+            Length: 0,
+            Width: 0,
+            Height: 0,
+            DimensionUnit: "",
+            Country: "",
+            SkuCode: "",
+            HsCode: "",
+            ImportHsCode: "",
+            CpcCode: "",
+            ExportHsCode: "",
+            ItemUrl: "",
+            ImageUrl: "",
+          }
+      ]
      
    });
 
    const [shipperConfigData, setshipperConfigData] = React.useState({
-        ShipperName: "",
-                Address1: "",
-                Address2: "",
-                Address3: "",
-                City: "",
-                State: "",
-                Zip: "",
-                Country: "",
-                Phone: "",
-                CompanyEmail: "",
-                Vat: "",
-                Eori: "",
-                Ioss: "",
-                Aen: "",
-                Abn: "",
-                Grt: "",
-                TaxId: "",
-                ClientAccountCode: ""
+        ShipperName:"",
+          ClientAccountCode: "",
+          Address1: "",
+          Address2: "",
+          Address3: "",
+          City: "",
+          State: "",
+          Zip: "",
+          Country: "",
+          Phone: "",
+          CompanyEmail: "",
+          Vat: "",
+          Eori: "",
+          Ioss: "",
+          Aen: "",
+          Abn:"",
+          Grt: "",
+          TaxId: "" 
    });
 
    const [checked, setChecked] = React.useState(false);
+   const [shippers, setShippers] = React.useState([]);
+  const [selectedShipper, setSelectedShipper] = React.useState('');
+  const [isUploading, setIsUploading] = React.useState(false);
 
    const loggedInUser : User = JSON.parse(localStorage.getItem("userdetails"));
 
   React.useEffect(() => {
     if (/CreateParcelForm/.test(window.location.href)) {
-      debugger;
+      
       setOpen(true);
-      if(loggedInUser.Role === "Shipper"){
-      onLoadParcel(loggedInUser.ShipperAccountCode);
+      if (loggedInUser && loggedInUser.Role === "Shipper" && loggedInUser.ShipperAccountCode) { 
+        getShipperConfig(loggedInUser.ShipperAccountCode);
+        setSelectedShipper(loggedInUser.ShipperAccountCode);
+      }else{
+        getShipperConfig("");
       }
+      
     }
   }, []);
 
-  const onLoadParcel = React.useCallback((shipperAccountCode) => {
-    debugger;
+  
 
-    const shipperConfig= {
-      "ShipperName": shipperAccountCode
-    }
-
-    const myJSON = JSON.stringify(shipperConfig);
-    axios(
-      {
-        method: "POST",
-        url: "https://7uwv62mcpb.execute-api.eu-west-2.amazonaws.com/dev/shipperconfig",
-        headers: { "x-api-key" : "TYXQrJvtOT1ac268C3eb0962We9XUlJu1Dls8Rvu" },
-        data: myJSON
-      }            
-  )
-  .then(response => { 
-    debugger;
+   const getShipperConfig = React.useCallback((shipperAccountCode) => {
+        
+        
     
-    // Store results in the results array
-   
-       const results = {
-        ShipperName: response.data.ShipperName ?? "",
-        ClientAccountCode: response.data.ClientAccountCode ?? "",
-        Address1: response.data.Address1 ?? "",
-        Address2: response.data.Address2 ?? "",
-        Address3: response.data.Address3 ?? "",
-        City: response.data.City ?? "",
-        State: response.data.State ?? "",
-        Zip: response.data.Zip ?? "",
-        Country: response.data.Country ?? "",
-        Phone: response.data.Phone ?? "",
-        CompanyEmail: response.data.CompanyEmail ?? response.data.Email ?? "",
-        Vat: response.data.Vat ?? "",
-        Eori: response.data.Eori ?? "",
-        Ioss: response.data.Ioss ?? "",
-        Aen: response.data.Aen ?? "",
-        Abn: response.data.Abn ?? "",
-        Grt: response.data.Grt ?? "",
-        TaxId: response.data.TaxId ?? ""
-      };  
-
-    setshipperConfigData(results);     
-                       
-  });
-  }, null);
+        axios(
+          {
+            method: "GET",
+            url: "https://7uwv62mcpb.execute-api.eu-west-2.amazonaws.com/dev/shipperconfig?shipperAccountCode=" + shipperAccountCode,
+            headers: { "x-api-key" : "TYXQrJvtOT1ac268C3eb0962We9XUlJu1Dls8Rvu" },
+            
+          }            
+      )
+      .then(response => { 
+        
+  
+        const results = [];
+        // Store results in the results array
+        response.data.forEach((value) => {
+          results.push({
+            ShipperAccountCode: value.ShipperAccountCode,
+            ShipperName: value.ShipperName,           
+            Address1: value.Address1 ?? "",
+            Address2: value.Address2 ?? "",
+            Address3: value.Address3 ?? "",
+            City: value.City ?? "",
+            State: value.State ?? "",
+            Zip: value.Zip ?? "",
+            Country: value.Country ?? "",
+            Phone: value.Phone ?? "",
+            CompanyEmail: value.CompanyEmail ?? value.Email ?? "",
+            Vat: value.Vat ?? "",
+            Eori: value.Eori ?? "",
+            Ioss: response.data.Ioss ?? "",
+            Aen: value.Aen ?? "",
+            Abn: value.Abn ?? "",
+            Grt: value.Grt ?? "",
+            TaxId: value.TaxId ?? ""
+          });
+        });
+        
+        // Store results in the results array
+        setShippers(results);  
+        debugger;
+        
+        if(shipperAccountCode){
+          const shipperConfig = results.find(shipper => shipper.ShipperAccountCode === shipperAccountCode);
+          if (shipperConfig) {
+            setshipperConfigData(shipperConfig);
+          } 
+        }
+                           
+      });
+      }, null);
 
     const openParcelTable =()=>{
       debugger;
@@ -235,7 +232,7 @@ export function CreateParcelForm() {
     const CreateParcel =()=>{
       debugger;
       parcelData.Items = parcels;
-      parcelData.ShipperConfig =shipperConfigData;
+      parcelData.ShipperAccountCode = selectedShipper;
       const myJSON = JSON.stringify(parcelData);
 
       CreateNewParcel(parcelData);
@@ -244,7 +241,7 @@ export function CreateParcelForm() {
 
 
     const CreateNewParcel = React.useCallback((params) =>  {    
-   
+      debugger;
       axios(
         {
             method: "POST",
@@ -257,6 +254,16 @@ export function CreateParcelForm() {
       navigate("/parcels");
       });
     }, []);
+
+    const handleShipper = (e) => {
+    debugger;
+    setSelectedShipper(e.target.value);      
+    const shipperConfig = shippers.find(shipper => shipper.ShipperAccountCode === e.target.value);
+          if (shipperConfig) {
+            setshipperConfigData(shipperConfig);
+          } 
+   
+  };
 
     const setDangerousGoods =()=>{
       checked== true? setChecked(false) : setChecked(true);
@@ -776,6 +783,26 @@ export function CreateParcelForm() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {loggedInUser && loggedInUser.Role === "Administrator" && (
+                        <div >
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Shipper <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                              value={selectedShipper}
+                              onChange={(e) =>  handleShipper(e)}
+                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                              disabled={isUploading}
+                            >
+                              <option value="">Choose a shipper...</option>
+                              {shippers.map((shipper) => (
+                                <option key={shipper.ShipperAccountCode} value={shipper.ShipperAccountCode}>
+                                  {shipper.ShipperAccountCode} - {shipper.ShipperName}
+                                </option>
+                              ))}
+                            </select>
+                        </div>
+                    )}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="senderName">Name</Label>

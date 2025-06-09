@@ -20,14 +20,22 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import { themeBalham  } from "ag-grid-community";
 import { useAuth } from './contexts/AuthContext'
 
+interface User {
+  UserName: string
+  Role: string
+  Permissions: string[]
+  ShipperAccountCode:string
+}
+
 export function ParcelsTable() {
 
   const [rowData, setRowData] = React.useState([]);
   const [totalParcel, setTotalParcel] = React.useState(0);
   const myTheme = themeBalham.withParams({ accentColor: 'red' });
   let navigate = useNavigate();
-  const { user } = useAuth();
-
+const userDetails : User = JSON.parse(localStorage.getItem("userdetails"));
+  
+  
    // Custom grid theme styles - Updated to match warehouse style
   const gridTheme = {
     '--ag-background-color': '#ffffff',
@@ -45,13 +53,27 @@ export function ParcelsTable() {
     '--ag-header-font-weight': '600',
   }
   
-  const onGridReady = React.useCallback((params) =>  {    
+  const onGridReady = React.useCallback((params) =>  { 
+debugger;
+    var shippingDetails = null;
+    
+    if(userDetails && userDetails.Role === "Shipper"){
+        shippingDetails = {
+          ShipperAccountCode: userDetails.ShipperAccountCode
+        }
+      
+      }else{
+        shippingDetails = {
+          ShipperAccountCode: ""
+        }
+      }
    
     axios(
       {
-          method: "GET",
+          method: "POST",
           url: "https://7uwv62mcpb.execute-api.eu-west-2.amazonaws.com/dev/shipmentdetails",
-          headers: { "x-api-key" : "TYXQrJvtOT1ac268C3eb0962We9XUlJu1Dls8Rvu" }
+          headers: { "x-api-key" : "TYXQrJvtOT1ac268C3eb0962We9XUlJu1Dls8Rvu" },
+          data: shippingDetails,
       }            
   )
   .then(response => { 
@@ -60,7 +82,7 @@ export function ParcelsTable() {
     // Store results in the results array
     response.data.map((value) => {
        results.push({
-        CustomerReference: value.CustomerReference,
+        CustomerReference: value.CUSTOMER_ID_REFERENCE,
         TrackingNumber: value.TrackingNumber,
         OrderReference: value.OrderReference,
         ConsigneeName: value.ConsigneeName,
@@ -73,7 +95,8 @@ export function ParcelsTable() {
         ServiceId : value.ServiceId,
         ServiceName:"TrackPak Worldwide",
         ShipperCompany : value.ShipperConf,
-        ZplLabel : value.ZplLabel
+        ZplLabel : value.ZplLabel,
+        ShipperAccountCode: value.ShipperAccountCode
         
       });
     }); 
@@ -82,6 +105,11 @@ export function ParcelsTable() {
     setTotalParcel(results.length);                   
   });
   }, []);
+
+  const handleParcelForm = (params) => {
+    debugger;
+    navigate("/ParcelForm", {  state: { CustomerReference: params.data.CustomerReference, ShipperAccountCode: params.data.ShipperAccountCode } });
+  }
 
    // Column Definitions: Updated to match warehouse style
    const [colDefs, setColDefs] = React.useState([
@@ -131,7 +159,7 @@ export function ParcelsTable() {
       cellRenderer: (params) => (
         <div className="py-2">
           <div className="mb-2">
-            <button onClick={() => navigate("/ParcelForm", { state: { CustomerReference: params.data.CustomerReference}})} className="text-[#4AA3BA] hover:underline flex items-center gap-1 font-medium" >
+            <button onClick={() => handleParcelForm(params)} className="text-[#4AA3BA] hover:underline flex items-center gap-1 font-medium" >
               <FileText className="h-4 w-4" />
               Details
             </button>

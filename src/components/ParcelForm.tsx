@@ -35,6 +35,13 @@ interface ParcelItem {
   ImageUrl: string
 }
 
+interface User {
+  UserName: string
+  Role: string
+  Permissions: string[]
+  ShipperAccountCode:string
+}
+
 
 export function ParcelForm() {
   const [open, setOpen] = React.useState(false);
@@ -42,6 +49,7 @@ export function ParcelForm() {
   const location = useLocation();
   const [checked, setChecked] = React.useState(false);
   const totalSteps = 4;
+  const userDetails : User = JSON.parse(localStorage.getItem("userdetails"));
     const steps = [
       { id: "info", title: "Service Info", icon: <Info size={20} /> },    
       { id: "userdetail", title: "User Info", icon: <Settings size={20} /> },
@@ -110,21 +118,7 @@ export function ParcelForm() {
       Incoterm:"",
       TrackingNumber:"",
       Price:0,
-      ShipperConfig: {
-          ShipperName: "",
-          AccountCode: "",
-          Address1: "",
-          Address2: "",
-          Address3: "",
-          City: "",
-          State: "",
-          Zip: "",
-          Country: "",
-          Phone: "",
-          Email: "",
-          Ioss: "",
-          Vat: ""
-      },
+      ShipperAccountCode:"",
       Items: [
           {
             Id: 0,
@@ -151,30 +145,72 @@ export function ParcelForm() {
        
      });
 
+     const [shipperConfigData, setshipperConfigData] = React.useState({
+          ShipperName:"",
+          ClientAccountCode: "",
+          Address1: "",
+          Address2: "",
+          Address3: "",
+          City: "",
+          State: "",
+          Zip: "",
+          Country: "",
+          Phone: "",
+          CompanyEmail: "",
+          Vat: "",
+          Eori: "",
+          Ioss: "",
+          Aen: "",
+          Abn:"",
+          Grt: "",
+          TaxId: ""   
+    
+    })
+
+    const [shippers, setShippers] = React.useState([]);
+      const [selectedShipper, setSelectedShipper] = React.useState('');
+      const [isUploading, setIsUploading] = React.useState(false);
+
+      const handleShipper = (e) => {
+    
+    setSelectedShipper(e.target.value);
+   
+  };
+        
+
   React.useEffect(() => {
     if (/ParcelForm/.test(window.location.href)) {
-      setOpen(true);
+
+      
+      setOpen(true);     
+      
       onLoadParcel();
+      
     }
   }, []);
 
   const onLoadParcel = React.useCallback(() => {
-    debugger;
+    
+        var shippingDetails = {
+          CUSTOMER_ID_REFERENCE: location.state?.CustomerReference || ""          
+        };
+
     axios(
       {
-        method: "GET",
-        url: "https://7uwv62mcpb.execute-api.eu-west-2.amazonaws.com/dev/shipmentdetails?customerReferenceId=" + location.state.CustomerReference,
-        headers: { "x-api-key" : "TYXQrJvtOT1ac268C3eb0962We9XUlJu1Dls8Rvu" }
+        method: "Post",
+        url: "https://7uwv62mcpb.execute-api.eu-west-2.amazonaws.com/dev/shipmentdetails",
+        headers: { "x-api-key" : "TYXQrJvtOT1ac268C3eb0962We9XUlJu1Dls8Rvu" },
+        data: JSON.stringify(shippingDetails)
       }            
   )
   .then(response => { 
-    debugger;
+    
     const results = [];
     const items = [];
     // Store results in the results array
     response.data.map((value) => {
        results.push({
-        CustomerReference: value.CustomerReference,
+        CustomerReference: value.CUSTOMER_ID_REFERENCE,
         TrackingNumber: value.TrackingNumber,
         OrderReference: value.OrderReference,
         ConsigneeName: value.ConsigneeName,
@@ -182,7 +218,6 @@ export function ParcelForm() {
         ConsigneeAddress2: value.ConsigneeAddress2,
         ConsigneeAddress3: value.ConsigneeAddress3,
         Zip: value.Zip,
-        ConsigneeCountry: value.ConsigneeCountry,
         BatchId : value.BatchId,
         ServiceId : value.ServiceId,
         ShipperCompany : value.ShipperCompany,
@@ -207,12 +242,13 @@ export function ParcelForm() {
       ConsigneeZip: value.ConsigneeZip,
       ConsigneePhone: value.ConsigneePhone,
       ConsigneeEmail: value.ConsigneeEmail,
+      ConsigneeCountry: value.CONSIGNEE_COUNTRY,
       Type: value.Type,
       AddressCode:value.AddressCode,
       Incoterm:value.Incoterm,
       ConsigneeId : value.ConsigneeId,
       Price: value.Price,
-      ShipperConfig: value.ShipperConfig
+      ShipperAccountCode: value.ShipperAccountCode      
       });
 
       items.push({
@@ -236,12 +272,81 @@ export function ParcelForm() {
             ItemUrl: value.ItemUrl,
             ImageUrl: value.ImageUrl
       });
-    }); 
+    });
+    
+    
 
     setParcelData(results[0]);     
-    setParcels(items);                    
+    setParcels(items); 
+
+    var shipperAccountCode = results[0]?.ShipperAccountCode || "";
+    
+    
+    
+    getShipperConfig(shipperAccountCode);
+    setSelectedShipper(shipperAccountCode);
   });
   }, null);
+
+  const getShipperConfig = React.useCallback((shipperAccountCode) => {
+      
+      var parcelShipperCode = shipperAccountCode;      
+
+      if(userDetails && userDetails.Role !== "Shipper"){        
+        shipperAccountCode = "";
+    }
+  
+      axios(
+        {
+          method: "GET",
+          url: "https://7uwv62mcpb.execute-api.eu-west-2.amazonaws.com/dev/shipperconfig?shipperAccountCode=" + shipperAccountCode,
+          headers: { "x-api-key" : "TYXQrJvtOT1ac268C3eb0962We9XUlJu1Dls8Rvu" },
+          
+        }            
+    )
+    .then(response => { 
+      
+
+      const results = [];
+      // Store results in the results array
+      response.data.forEach((value) => {
+        results.push({
+          ShipperAccountCode: value.ShipperAccountCode,
+          ShipperName: value.ShipperName,           
+          Address1: value.Address1 ?? "",
+          Address2: value.Address2 ?? "",
+          Address3: value.Address3 ?? "",
+          City: value.City ?? "",
+          State: value.State ?? "",
+          Zip: value.Zip ?? "",
+          Country: value.Country ?? "",
+          Phone: value.Phone ?? "",
+          CompanyEmail: value.CompanyEmail ?? value.Email ?? "",
+          Vat: value.Vat ?? "",
+          Eori: value.Eori ?? "",
+          Ioss: response.data.Ioss ?? "",
+          Aen: value.Aen ?? "",
+          Abn: value.Abn ?? "",
+          Grt: value.Grt ?? "",
+          TaxId: value.TaxId ?? ""
+        });
+      });
+      
+      // Store results in the results array
+      setShippers(results);  
+      debugger;
+      
+      if(parcelShipperCode){
+        const shipperConfig = results.find(shipper => shipper.ShipperAccountCode === parcelShipperCode);
+        if (shipperConfig) {
+          setshipperConfigData(shipperConfig);
+        } 
+      }
+                         
+    });
+    }, null);
+
+  
 
     const openParcelTable =()=>{
       setOpen(false);
@@ -311,7 +416,7 @@ export function ParcelForm() {
     }
   
     const deleteParcel = (id: number) => {
-      debugger;
+      
       if (parcels.length > 1) {
         const newParcels = parcels.filter((parcel) => parcel.Id !== id)
         setParcels(newParcels)
@@ -326,7 +431,7 @@ export function ParcelForm() {
     }
 
     function changeParcelsTextboxHandler(index,event) {
-      debugger;
+      
       //event.persist;
     
       let value = event.target.value;
@@ -348,7 +453,7 @@ export function ParcelForm() {
     };
 
     function changeParcelsDropdownHandler(index,event ,name) {
-      debugger;
+      
       //event.persist;
     
       let value = event;
@@ -366,7 +471,7 @@ export function ParcelForm() {
     };
 
     function changeParcelDataTextboxHandler(event,name) {
-      debugger;
+      
       let value = event.target.value;  
       const result= {...parcelData};       
       Object.keys(result).forEach(key => {          
@@ -395,7 +500,8 @@ export function ParcelForm() {
       setParcelData(result);
     };
 
-    const CreateNewParcel = React.useCallback((params) =>  {    
+    const CreateNewParcel = React.useCallback((params) =>  {  
+      debugger;  
    
       axios(
         {
@@ -412,6 +518,7 @@ export function ParcelForm() {
 
     const CreateParcel =()=>{
       parcelData.Items = parcels;
+      
       const myJSON = JSON.stringify(parcelData);
 
       CreateNewParcel(parcelData);
@@ -771,12 +878,32 @@ export function ParcelForm() {
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                    {userDetails && userDetails.Role === "Administrator" && (
+                        <div >
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Shipper <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                              value={selectedShipper}
+                              onChange={(e) =>  handleShipper(e)}
+                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                              disabled={isUploading}
+                            >
+                              <option value="">Choose a shipper...</option>
+                              {shippers.map((shipper) => (
+                                <option key={shipper.ShipperAccountCode} value={shipper.ShipperAccountCode}>
+                                  {shipper.ShipperAccountCode} - {shipper.ShipperName}
+                                </option>
+                              ))}
+                            </select>
+                        </div>
+                    )}
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="senderName">Name</Label>
                           <Input 
                             id="senderName" 
-                            value={parcelData.ShipperConfig.ShipperName} 
+                            value={shipperConfigData.ShipperName} 
                             disabled
                           />
                         </div>
@@ -785,7 +912,7 @@ export function ParcelForm() {
                           <Label htmlFor="senderCompany">Company</Label>
                           <Input 
                             id="senderCompany" 
-                            value={parcelData.ShipperConfig.AccountCode} 
+                            value={shipperConfigData.ClientAccountCode} 
                             disabled
                           />
                         </div>
@@ -795,7 +922,7 @@ export function ParcelForm() {
                         <Label htmlFor="senderAddress1">Address Line 1</Label>
                         <Input 
                           id="senderAddress1" 
-                          value={parcelData.ShipperConfig.Address1} 
+                          value={shipperConfigData.Address1} 
                           disabled
                         />
                       </div>
@@ -804,7 +931,7 @@ export function ParcelForm() {
                         <Label htmlFor="senderAddress2">Address Line 2</Label>
                         <Input 
                           id="senderAddress2" 
-                          value={parcelData.ShipperConfig.Address2} 
+                          value={shipperConfigData.Address2} 
                           disabled
                         />
                       </div>
@@ -813,7 +940,7 @@ export function ParcelForm() {
                         <Label htmlFor="senderAddress3">Address Line 3</Label>
                         <Input 
                           id="senderAddress3" 
-                          value={parcelData.ShipperConfig.Address3} 
+                          value={shipperConfigData.Address3} 
                           disabled
                         />
                       </div>
@@ -823,7 +950,7 @@ export function ParcelForm() {
                           <Label htmlFor="senderCity">City</Label>
                           <Input 
                             id="senderCity" 
-                            value={parcelData.ShipperConfig.City} 
+                            value={shipperConfigData.City} 
                             disabled
                           />
                         </div>
@@ -832,7 +959,7 @@ export function ParcelForm() {
                         <Label htmlFor="senderState">State</Label>
                         <Input 
                           id="senderState" 
-                          value={parcelData.ShipperConfig.State} 
+                          value={shipperConfigData.State} 
                           disabled
                         />
                       </div>
@@ -841,7 +968,7 @@ export function ParcelForm() {
                           <Label htmlFor="senderZip">Postal Code</Label>
                           <Input 
                             id="senderZip" 
-                            value={parcelData.ShipperConfig.Zip} 
+                            value={shipperConfigData.Zip} 
                             disabled
                           />
                         </div>
@@ -851,7 +978,7 @@ export function ParcelForm() {
                         <Label htmlFor="senderCountry">Country</Label>
                         <Input 
                           id="senderCountry" 
-                          value={parcelData.ShipperConfig.Country === "GB" ? "United Kingdom" : parcelData.ShipperConfig.Country} 
+                          value={shipperConfigData.Country === "GB" ? "United Kingdom" : shipperConfigData.Country} 
                           disabled
                         />
                       </div>
@@ -861,7 +988,7 @@ export function ParcelForm() {
                           <Label htmlFor="senderPhone">Phone</Label>
                           <Input 
                             id="senderPhone" 
-                            value={parcelData.ShipperConfig.Phone} 
+                            value={shipperConfigData.Phone} 
                             disabled
                           />
                         </div>
@@ -870,7 +997,7 @@ export function ParcelForm() {
                           <Label htmlFor="senderEmail">Email</Label>
                           <Input 
                             id="senderEmail" 
-                            value={parcelData.ShipperConfig.Email} 
+                            value={shipperConfigData.CompanyEmail} 
                             disabled
                           />
                         </div>
@@ -878,12 +1005,12 @@ export function ParcelForm() {
                         <div className="space-y-2">
                           <Label htmlFor="sender-vat">VAT</Label>
                           <Input id="sender-vat" 
-                                 value={parcelData.ShipperConfig.Vat}/>
+                                 value={shipperConfigData.Vat}/>
                         </div>
                          <div className="space-y-2">
                            <Label htmlFor="sender-ioss">IOSS</Label>
                            <Input id="sender-ioss" 
-                                  value={parcelData.ShipperConfig.Ioss}/>
+                                  value={shipperConfigData.Ioss}/>
                             </div>
                       </div>
                     </CardContent>
