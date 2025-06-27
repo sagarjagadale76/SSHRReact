@@ -1,0 +1,36 @@
+export interface RoutingRule {
+  id?: string;
+  active: string;
+  service: string;
+  warehouse: string;
+  users?: string;
+  priority: string;
+  carrier: string;
+  min_price: string;
+  max_price: string;
+  currency: string;
+  max_dimension: string;
+  max_dimension_sum: string;
+  min_length: string;
+  max_length: string;
+  min_width: string;
+  max_width: string;
+  min_weight: string;
+  max_weight: string;
+  min_height: string;
+  max_height: string;
+  min_girth: string;
+  max_girth: string;
+  incoterm: string;
+  ioss_declared: string;
+  cod_declared: string;
+  comment: string;
+  country: string;
+  zip: string;
+  conditions?: string;
+  descriptionKeywords?: string;
+  hsCode?: string;
+  countriesOfOrigin?: string;
+  included_users?: string[];
+  excluded_users?: string[];
+}
