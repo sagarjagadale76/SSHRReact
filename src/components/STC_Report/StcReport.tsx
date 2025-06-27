@@ -111,8 +111,8 @@ export function StcReport() {
   // }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="flex p-2 bg-gray-100">
+    <div className="flex flex-col h-screen">
+      <div className="p-2 bg-gray-100 ">
         <button
           className={`px-4 py-2 mx-1 ${
             selectedTab === "overview" ? "bg-gray-800 text-white" : "bg-white"
@@ -123,42 +123,34 @@ export function StcReport() {
         </button>
         <button
           className={`px-4 py-2 mx-1 ${
-            selectedTab === "STCR_summary"
-              ? "bg-gray-800 text-white"
-              : "bg-white"
+            selectedTab === "insights" ? "bg-gray-800 text-white" : "bg-white"
           }`}
-          onClick={() => setSelectedTab("STCR_summary")}
+          onClick={() => setSelectedTab("insights")}
         >
           STCR Summary
         </button>
       </div>
       <div className="p-4">
-        {selectedTab === "overview" && (
+        {selectedTab === "insights" && (
           <>
             {loading ? (
               <div className="flex justify-center items-center h-screen">
                 <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
               </div>
             ) : (
-              <>
+              <div>
                 <StcFilter
                   table_data={table_data}
                   onFilterApply={onFilterApply}
                 />
-                <Card className="mt-4 mb-4">
-                  <CardContent>
-                    <StcTable tableData={filteredData} loading={loading} />
-                  </CardContent>
-                </Card>
+                <StcTable tableData={filteredData} loading={loading} />
                 <StcDashboard stc_data={table_data} />
-              </>
+              </div>
             )}
           </>
         )}
 
-        {selectedTab === "STCR_summary" && (
-          <StcDashboard stc_data={table_data} />
-        )}
+        {selectedTab === "overview" && <StcDashboard stc_data={table_data} />}
       </div>
     </div>
   );
