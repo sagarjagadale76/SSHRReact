@@ -123,16 +123,14 @@ export function StcTable({ tableData, loading }) {
     {
       field: "destination",
       headerName: " Destination",
-      tooltipValueGetter: (p) => p.value,
-      headerTooltip: "Destination",
+
       sortable: true,
       flex: 1,
       cellRenderer: (params) => <>{params.data.destination}</>,
     },
     {
       field: "service",
-      tooltipValueGetter: (p) => p.value,
-      headerTooltip: "Service",
+
       headerName: " Service",
       sortable: true,
       flex: 1,
@@ -143,14 +141,12 @@ export function StcTable({ tableData, loading }) {
       headerName: " AVG. Days (INC. CUSTOMS)",
       sortable: true,
       flex: 1,
-      tooltipValueGetter: (p) => p.value,
-      headerTooltip: "AVG. Days (INC. CUSTOMS)",
+
       cellRenderer: (params) => <>{params.data.avg_delivery_days}</>,
     },
     {
       field: "avg_delivery_days_ex_customs",
-      tooltipValueGetter: (p) => p.value,
-      headerTooltip: "AVG. Days (EXC. CUSTOMS)",
+
       headerName: " AVG. Days (EXC. CUSTOMS)",
       sortable: true,
       flex: 1,
@@ -158,8 +154,7 @@ export function StcTable({ tableData, loading }) {
     },
     {
       field: "total_parcels",
-      tooltipValueGetter: (p) => p.value,
-      headerTooltip: "Total Parcels",
+
       headerName: " Total Parcels",
       sortable: true,
       flex: 1,
@@ -167,8 +162,7 @@ export function StcTable({ tableData, loading }) {
     },
     {
       field: "total_on_time",
-      tooltipValueGetter: (p) => p.value,
-      headerTooltip: "Total on time",
+
       headerName: " Total on time",
       sortable: true,
       flex: 1,
@@ -176,8 +170,7 @@ export function StcTable({ tableData, loading }) {
     },
     {
       field: "percentage_onTime",
-      tooltipValueGetter: (p) => p.value,
-      headerTooltip: "Percent on Time",
+
       headerName: " Percent on Time",
       sortable: true,
       flex: 1,
@@ -185,8 +178,7 @@ export function StcTable({ tableData, loading }) {
     },
     {
       field: "total_late",
-      tooltipValueGetter: (p) => p.value,
-      headerTooltip: "Total Late",
+
       headerName: " Total Late",
       sortable: true,
       flex: 1,
@@ -194,8 +186,7 @@ export function StcTable({ tableData, loading }) {
     },
     {
       field: "percentage_late",
-      tooltipValueGetter: (p) => p.value,
-      headerTooltip: "Percent Late",
+
       headerName: " Percent Late",
       sortable: true,
       flex: 1,
@@ -203,8 +194,7 @@ export function StcTable({ tableData, loading }) {
     },
     {
       field: "total_delivery_exceptions",
-      tooltipValueGetter: (p) => p.value,
-      headerTooltip: "Total Delivery Exceptions",
+
       headerName: " Total Delivery Exceptions",
       sortable: true,
       flex: 1,
@@ -212,8 +202,7 @@ export function StcTable({ tableData, loading }) {
     },
     {
       field: "percentage_delivery_exceptions",
-      tooltipValueGetter: (p) => p.value,
-      headerTooltip: "Percent delivery exceptions",
+
       headerName: " Percent delivery exceptions",
       sortable: true,
       flex: 1,
@@ -223,8 +212,7 @@ export function StcTable({ tableData, loading }) {
     },
     {
       field: "percentage_in_transit",
-      tooltipValueGetter: (p) => p.value,
-      headerTooltip: "Total in transit",
+
       headerName: " Total in transit",
       sortable: true,
       flex: 1,
@@ -232,8 +220,7 @@ export function StcTable({ tableData, loading }) {
     },
     {
       field: "percentage_in_transit",
-      tooltipValueGetter: (p) => p.value,
-      headerTooltip: "Percent in transit",
+
       headerName: " Percent in transit",
       sortable: true,
       flex: 1,
@@ -242,14 +229,11 @@ export function StcTable({ tableData, loading }) {
   ]);
 
   return (
-    <div>
+    <div className="px-4 pb-4  overflow-hidden">
       <div
-        className="ag-theme-quartz"
+        className="ag-theme-quartz w-full"
         style={{
-          height: "350px",
-          maxWidth: "1400px",
-          width: "100%",
-          marginTop: "40px",
+          height: "calc(100vh - 120px - 120px)", // 120px for header and filter form, 120px (top and bottom margin and download button)
         }}
       >
         <AgGridReact
@@ -271,7 +255,7 @@ export function StcTable({ tableData, loading }) {
       <div className="mt-4 flex flex-row-reverse">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="bg-gray-800 text-white">
+            <Button className="bg-[#4AA3BA] hover:bg-[#3A8296]">
               Download
             </Button>
           </DropdownMenuTrigger>

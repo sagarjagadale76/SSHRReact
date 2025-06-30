@@ -279,7 +279,7 @@ export default function StcFilter({ table_data, onFilterApply }) {
               </FormItem>
             )}
           />
-          <Button type="submit">
+          <Button type="submit" className="bg-[#4AA3BA] hover:bg-[#3A8296]">
             {filterApplied ? "Clear Filter" : "Apply Filter"}
           </Button>
         </form>
