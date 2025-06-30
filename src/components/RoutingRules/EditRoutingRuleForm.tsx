@@ -77,6 +77,42 @@ const EditRoutingRuleForm: React.FC<EditRoutingRuleFormProps> = ({
   routingTableData,
   routingRuleFilterData,
 }) => {
+  //   type: string,
+  //   ruleData?: RoutingRule[],
+  //   routingRuleFilterData?: any
+  // ) => {
+  //   if (rule) {
+  //     let data = ruleData ?? routingTableData;
+  //     let users = data.flatMap((rule) => {
+  //       const value = rule.users?.trim();
+
+  //       if (!value) return [];
+
+  //       if (value === "Any") return ["Any"];
+
+  //       const inclMatch = value.match(/incl\s+([^e]*)/i);
+  //       const exclMatch = value.match(/excl\s+([^i]*)/i);
+
+  //       const incl = inclMatch
+  //         ? inclMatch[1].split(",").map((u) => u.trim())
+  //         : [];
+  //       const excl = exclMatch
+  //         ? exclMatch[1].split(",").map((u) => u.trim())
+  //         : [];
+
+  //       return type === "incl"
+  //         ? [...incl].filter(Boolean)
+  //         : [...excl].filter(Boolean);
+  //     });
+  //     console.log("Check the users array: ", users);
+  //     return users;
+  //   } else if (routingRuleFilterData?.users) {
+  //     return routingRuleFilterData.users;
+  //   } else {
+  //     return ["Any"];
+  //   }
+  // };
+
   const getAllUsers = (
     type: string,
     ruleData?: RoutingRule[],
@@ -84,32 +120,28 @@ const EditRoutingRuleForm: React.FC<EditRoutingRuleFormProps> = ({
   ) => {
     if (rule) {
       let data = ruleData ?? routingTableData;
-      let users = Array.from(
-        new Set(
-          data.flatMap((rule) => {
-            const value = rule.users?.trim();
 
-            if (!value) return [];
+      let users = data.flatMap((rule) => {
+        const value = rule.users?.trim();
 
-            if (value === "Any") return ["Any"];
+        if (!value) return [];
 
-            const inclMatch = value.match(/incl\s+([^e]*)/i);
-            const exclMatch = value.match(/excl\s+([^i]*)/i);
+        if (value === "Any") return ["Any"];
 
-            const incl = inclMatch
-              ? inclMatch[1].split(",").map((u) => u.trim())
-              : [];
-            const excl = exclMatch
-              ? exclMatch[1].split(",").map((u) => u.trim())
-              : [];
+        const inclMatch = value.match(/incl\s+([^]*?)(?=\s+excl|$)/i);
+        const exclMatch = value.match(/excl\s+([^]*?)(?=\s+incl|$)/i);
 
-            return type === "incl"
-              ? [...incl].filter(Boolean)
-              : [...excl].filter(Boolean);
-          })
-        )
-      );
+        const incl = inclMatch
+          ? inclMatch[1].split(",").map((u) => u.trim())
+          : [];
+        const excl = exclMatch
+          ? exclMatch[1].split(",").map((u) => u.trim())
+          : [];
 
+        return type === "incl" ? incl.filter(Boolean) : excl.filter(Boolean);
+      });
+
+      console.log("Check the users array: ", users);
       return users;
     } else if (routingRuleFilterData?.users) {
       return routingRuleFilterData.users;
