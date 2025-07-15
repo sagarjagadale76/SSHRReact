@@ -743,7 +743,7 @@ const EditRoutingRuleForm: React.FC<EditRoutingRuleFormProps> = ({
                       <Textarea
                         {...field}
                         placeholder=""
-                        className="min-h-[80px] w-full rounded border border-gray-300 px-3 py-2 text-sm resize-none
+                        className="min-h-[80px] w-full rounded border border-gray-300 px-3 py-2 text-sm 
                           focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none
                           placeholder:text-gray-400"
                       />

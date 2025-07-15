@@ -18,6 +18,8 @@ import {
   House,
   Table2,
   Waypoints,
+  CircleCheckBig,
+  Settings2,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useToast } from "./hooks/use-toast";
@@ -58,7 +60,23 @@ let menuItems = [
     submenu: [],
     permissions: "View-Reports",
   },
-  { href: "/RoutingRules", label: "Routing Rule", icon: Waypoints },
+  {
+    href: "/rules",
+    label: "Rule",
+    icon: Waypoints,
+    submenu: [
+      {
+        href: "/rules/RoutingRules",
+        label: "Routing Rules",
+        icon: Settings2,
+      },
+      {
+        href: "/rules/ValidationRule",
+        label: "Validation Rules",
+        icon: CircleCheckBig,
+      },
+    ],
+  },
 ];
 
 let settingsItems = [
@@ -98,13 +116,49 @@ export function Sidebar() {
   const { toast } = useToast();
   const router = useNavigate();
   const [userDetail, setUserDetail] = React.useState<User>(null);
+  const sidebarRef = React.useRef<HTMLDivElement>(null);
+  const submenuRef = React.useRef<HTMLDivElement>(null);
 
   debugger;
   const stored: User = JSON.parse(localStorage.getItem("userdetails"));
 
+  // Handle click outside to close submenu
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      const isInsideSidebar =
+        sidebarRef.current && sidebarRef.current.contains(target);
+      const isInsideSubmenu =
+        submenuRef.current && submenuRef.current.contains(target);
+
+      if (!isInsideSidebar && !isInsideSubmenu) {
+        setActiveSubmenu(null);
+      }
+    };
+
+    if (activeSubmenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [activeSubmenu]);
+
+  // Close submenu when route changes
+  React.useEffect(() => {
+    setActiveSubmenu(null);
+  }, [location.pathname]);
+
   menuItems = menuItems.filter((item) => {
     if (!item.permissions) return true;
     if (!stored || !stored.Permissions) return false;
+
+    item.submenu = item.submenu.filter((subItem) => {
+      if (!subItem.permissions) return true;
+      if (!stored || !stored.Permissions) return false;
+      return stored.Permissions.includes(subItem.permissions);
+    });
     return stored.Permissions.includes(item.permissions);
   });
 
@@ -160,11 +214,113 @@ export function Sidebar() {
     return item.submenu && item.submenu.length > 0;
   };
 
+  const handleMenuItemClick = (item: any, e: React.MouseEvent) => {
+    if (hasSubmenu(item)) {
+      e.preventDefault();
+      toggleSubmenu(item.href);
+    }
+  };
+
+  const renderMenuItem = (item: any) => (
+    <div key={item.href} className="flex flex-col relative">
+      <div className="flex items-center">
+        {hasSubmenu(item) ? (
+          <div
+            className={cn(
+              "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors cursor-pointer w-full relative",
+              isActive(item.href)
+                ? "bg-secondary text-secondary-foreground"
+                : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
+              expanded && "justify-center"
+            )}
+            onClick={(e) => handleMenuItemClick(item, e)}
+          >
+            <item.icon className="h-4 w-4" />
+            {!expanded && (
+              <>
+                <span className="flex-1">{item.label}</span>
+                <ChevronRight
+                  className={cn(
+                    "h-4 w-4 transition-transform",
+                    activeSubmenu === item.href && "transform rotate-90"
+                  )}
+                />
+              </>
+            )}
+          </div>
+        ) : (
+          <Link
+            to={item.href}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors w-full",
+              isActive(item.href)
+                ? "bg-secondary text-secondary-foreground"
+                : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
+              expanded && "justify-center"
+            )}
+          >
+            <item.icon className="h-4 w-4" />
+            {!expanded && <span className="flex-1">{item.label}</span>}
+          </Link>
+        )}
+      </div>
+
+      {/* Submenu for expanded sidebar */}
+      {hasSubmenu(item) && activeSubmenu === item.href && expanded && (
+        <div
+          ref={submenuRef}
+          className="absolute left-full top-0 ml-2 bg-background border border-border rounded-md shadow-lg z-50 min-w-[200px]"
+        >
+          <div className="p-2 space-y-1">
+            {item.submenu.map((subItem) => (
+              <Link
+                key={subItem.href}
+                to={subItem.href}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                  isActive(subItem.href)
+                    ? "bg-secondary text-secondary-foreground"
+                    : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                )}
+                onClick={() => setActiveSubmenu(null)}
+              >
+                <subItem.icon className="h-4 w-4" />
+                <span>{subItem.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Submenu for collapsed sidebar */}
+      {hasSubmenu(item) && activeSubmenu === item.href && !expanded && (
+        <div className="ml-6 mt-1 space-y-1 border-l pl-2">
+          {item.submenu.map((subItem) => (
+            <Link
+              key={subItem.href}
+              to={subItem.href}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-md text-xs transition-colors",
+                isActive(subItem.href)
+                  ? "bg-secondary/70 text-secondary-foreground"
+                  : "text-muted-foreground hover:bg-secondary/30 hover:text-foreground"
+              )}
+            >
+              <subItem.icon className="h-3.5 w-3.5" />
+              <span>{subItem.label}</span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="flex h-screen bg-background">
       <aside
+        ref={sidebarRef}
         className={cn(
-          "bg-background border-r flex flex-col transition-all duration-300",
+          "bg-background border-r flex flex-col transition-all duration-300 relative",
           expanded ? "w-[60px]" : "w-[240px]"
         )}
       >
@@ -200,185 +356,13 @@ export function Sidebar() {
 
         <div className="flex-1 flex flex-col gap-2 p-3">
           <nav className="space-y-2">
-            {menuItems.map((item) => (
-              <div key={item.href} className="flex flex-col">
-                <div className="flex items-center">
-                  {hasSubmenu(item) && !expanded ? (
-                    <div
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors cursor-pointer",
-                        isActive(item.href)
-                          ? "bg-secondary text-secondary-foreground"
-                          : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
-                        expanded && "justify-center"
-                      )}
-                      onClick={() => toggleSubmenu(item.href)}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {!expanded && (
-                        <>
-                          <span className="flex-1">{item.label}</span>
-                          <ChevronRight
-                            className={cn(
-                              "h-4 w-4 transition-transform",
-                              activeSubmenu === item.href &&
-                                "transform rotate-90"
-                            )}
-                          />
-                        </>
-                      )}
-                    </div>
-                  ) : (
-                    <Link
-                      to={item.href}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                        isActive(item.href)
-                          ? "bg-secondary text-secondary-foreground"
-                          : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
-                        expanded && "justify-center"
-                      )}
-                      onClick={() =>
-                        hasSubmenu(item) &&
-                        !expanded &&
-                        toggleSubmenu(item.href)
-                      }
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {!expanded && (
-                        <>
-                          <span className="flex-1">{item.label}</span>
-                          {hasSubmenu(item) && (
-                            <ChevronRight
-                              className={cn(
-                                "h-4 w-4 transition-transform",
-                                activeSubmenu === item.href &&
-                                  "transform rotate-90"
-                              )}
-                            />
-                          )}
-                        </>
-                      )}
-                    </Link>
-                  )}
-                </div>
-
-                {/* Submenu */}
-                {hasSubmenu(item) &&
-                  activeSubmenu === item.href &&
-                  !expanded && (
-                    <div className="ml-6 mt-1 space-y-1 border-l pl-2">
-                      {item.submenu.map((subItem) => (
-                        <Link
-                          key={subItem.href}
-                          to={subItem.href}
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-2 rounded-md text-xs transition-colors",
-                            isActive(subItem.href)
-                              ? "bg-secondary/70 text-secondary-foreground"
-                              : "text-muted-foreground hover:bg-secondary/30 hover:text-foreground"
-                          )}
-                        >
-                          <subItem.icon className="h-3.5 w-3.5" />
-                          <span>{subItem.label}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-              </div>
-            ))}
+            {menuItems.map((item) => renderMenuItem(item))}
           </nav>
         </div>
 
         <div className="mt-auto border-t p-3">
           <nav className="space-y-2">
-            {settingsItems.map((item) => (
-              <div key={item.href} className="flex flex-col">
-                <div className="flex items-center">
-                  {hasSubmenu(item) && !expanded ? (
-                    <div
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors cursor-pointer",
-                        isActive(item.href)
-                          ? "bg-secondary text-secondary-foreground"
-                          : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
-                        expanded && "justify-center"
-                      )}
-                      onClick={() => toggleSubmenu(item.href)}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {!expanded && (
-                        <>
-                          <span className="flex-1">{item.label}</span>
-                          <ChevronRight
-                            className={cn(
-                              "h-4 w-4 transition-transform",
-                              activeSubmenu === item.href &&
-                                "transform rotate-90"
-                            )}
-                          />
-                        </>
-                      )}
-                    </div>
-                  ) : (
-                    <Link
-                      to={item.href}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                        isActive(item.href)
-                          ? "bg-secondary text-secondary-foreground"
-                          : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
-                        expanded && "justify-center"
-                      )}
-                      onClick={() =>
-                        hasSubmenu(item) &&
-                        !expanded &&
-                        toggleSubmenu(item.href)
-                      }
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {!expanded && (
-                        <>
-                          <span className="flex-1">{item.label}</span>
-                          {hasSubmenu(item) && (
-                            <ChevronRight
-                              className={cn(
-                                "h-4 w-4 transition-transform",
-                                activeSubmenu === item.href &&
-                                  "transform rotate-90"
-                              )}
-                            />
-                          )}
-                        </>
-                      )}
-                    </Link>
-                  )}
-                </div>
-
-                {/* Submenu */}
-                {hasSubmenu(item) &&
-                  activeSubmenu === item.href &&
-                  !expanded && (
-                    <div className="ml-6 mt-1 space-y-1 border-l pl-2">
-                      {item.submenu.map((subItem) => (
-                        <Link
-                          key={subItem.href}
-                          to={subItem.href}
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-2 rounded-md text-xs transition-colors",
-                            isActive(subItem.href)
-                              ? "bg-secondary/70 text-secondary-foreground"
-                              : "text-muted-foreground hover:bg-secondary/30 hover:text-foreground"
-                          )}
-                        >
-                          <subItem.icon className="h-3.5 w-3.5" />
-                          <span>{subItem.label}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-              </div>
-            ))}
+            {settingsItems.map((item) => renderMenuItem(item))}
           </nav>
         </div>
 

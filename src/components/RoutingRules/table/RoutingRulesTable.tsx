@@ -159,6 +159,7 @@ export function RoutingRulesTable({
       headerName: "Users",
       field: "users",
       width: 100,
+      autoHeight: true,
       cellRenderer: (params: any) => {
         const users = (params.data.users || "").trim();
         let displayValue = "";
@@ -179,7 +180,7 @@ export function RoutingRulesTable({
         }
 
         return (
-          <div className="whitespace-pre-wrap break-words text-sm py-2 text-gray-700">
+          <div className="whitespace-pre-wrap break-words text-sm py-1 text-gray-700">
             {displayValue}
           </div>
         );
@@ -188,7 +189,8 @@ export function RoutingRulesTable({
     {
       headerName: "Excluded Users",
       field: "excluded_users",
-      flex: 1,
+      autoHeight: true,
+      width: 100,
       cellRenderer: (params: any) => {
         const users = (params.data.users || "").trim();
         let displayValue = "";
@@ -297,7 +299,9 @@ export function RoutingRulesTable({
       flex: 2,
       sortable: true,
       cellRenderer: (params: any) => (
-        <span className="font-bold text-gray-700">{params.data.carrier}</span>
+        <span className="font-bold text-gray-700 py-2">
+          {params.data.carrier}
+        </span>
       ),
     },
     {
@@ -341,7 +345,7 @@ export function RoutingRulesTable({
   ]);
 
   return (
-    <div className="px-4 pb-6 flex-1 overflow-hidden">
+    <div className="px-2 pb-6 flex-1 overflow-hidden">
       <div className="space-y-4">
         <TooltipProvider>
           <div className="ag-theme-quartz rounded-xl w-full h-full custom-ag-grid">

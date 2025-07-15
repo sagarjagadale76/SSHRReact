@@ -21,10 +21,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
-import { Download } from "lucide-react";
+import { Download, Plus, X } from "lucide-react";
 import "../RoutingRules.css";
 import * as Papa from "papaparse";
 import * as XLSX from "xlsx";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../ui/dialog";
+import { EditRoutingRuleForm } from "../EditRoutingRuleForm";
+import axios from "axios";
+import { RoutingRule } from "../types/RoutingRule";
 
 type FilterParams = {
   service: string;
@@ -41,43 +51,37 @@ const RoutingRulesFilter = ({
   routingRuleFilterData,
 }) => {
   const [filterApplied, setFilterApplied] = React.useState(false);
-
-  const [destinationOptions, setDestinationOptions] = React.useState<string[]>(
-    []
-  );
-  const [serviceOptions, setServiceIdOptions] = React.useState<string[]>([]);
-  const [shipperOptions, setShipperOptions] = React.useState<string[]>([]);
-  const [carrierOptions, setCarrierOptions] = React.useState<string[]>([]);
+  const [isAddRuleOpen, setIsAddRuleOpen] = React.useState(false);
 
   // console.log("Check the routingrules values: ", routingRules);
 
-  const getAllUsers = () => {
-    let users = Array.from(
-      new Set(
-        routingRules.flatMap((rule) => {
-          const value = rule.users?.trim();
+  // const getAllUsers = () => {
+  //   let users = Array.from(
+  //     new Set(
+  //       routingRules.flatMap((rule) => {
+  //         const value = rule.users?.trim();
 
-          if (!value) return [];
+  //         if (!value) return [];
 
-          if (value.toLowerCase() === "Any") return ["Any"];
+  //         if (value.toLowerCase() === "Any") return ["Any"];
 
-          const inclMatch = value.match(/incl\s+([^e]*)/i);
-          const exclMatch = value.match(/excl\s+([^i]*)/i);
+  //         const inclMatch = value.match(/incl\s+([^e]*)/i);
+  //         const exclMatch = value.match(/excl\s+([^i]*)/i);
 
-          const incl = inclMatch
-            ? inclMatch[1].split(",").map((u) => u.trim())
-            : [];
-          const excl = exclMatch
-            ? exclMatch[1].split(",").map((u) => u.trim())
-            : [];
+  //         const incl = inclMatch
+  //           ? inclMatch[1].split(",").map((u) => u.trim())
+  //           : [];
+  //         const excl = exclMatch
+  //           ? exclMatch[1].split(",").map((u) => u.trim())
+  //           : [];
 
-          return [...incl, ...excl].filter(Boolean);
-        })
-      )
-    );
-    //console.log("Check the users array: ", users);
-    return users;
-  };
+  //         return [...incl, ...excl].filter(Boolean);
+  //       })
+  //     )
+  //   );
+  //   //console.log("Check the users array: ", users);
+  //   return users;
+  // };
 
   // const filterOptions = {
   //   service: Array.from(new Set(routingRules.map((rule) => rule.service))),
@@ -206,6 +210,37 @@ const RoutingRulesFilter = ({
     }
   };
 
+  //Open the popup to add new rule
+  const addRule = () => {
+    setIsAddRuleOpen(true);
+  };
+
+  // on save add new rule to the DB
+  const handleSave = (routingRule: RoutingRule) => {
+    console.log("Save Clicked");
+    const { conditions, ...latestRoutingRule } = routingRule;
+    const API_ENDPOINT =
+      "https://y0jwh0qg1b.execute-api.eu-west-2.amazonaws.com/DEV/AddRoutingRule";
+    try {
+      axios({
+        method: "POST",
+        url: API_ENDPOINT,
+        headers: { "x-api-key": "TYXQrJvtOT1ac268C3eb0962We9XUlJu1Dls8Rvu" },
+        data: latestRoutingRule,
+      }).then(async (response) => {
+        console.log("Check response: ", response);
+      });
+    } catch (error) {
+      console.error("API error:", error);
+    }
+
+    setIsAddRuleOpen(false);
+  };
+
+  const handleCancel = () => {
+    setIsAddRuleOpen(false);
+  };
+
   // Handle form submit
   const onSubmit = (values) => {
     if (filterApplied) {
@@ -250,241 +285,34 @@ const RoutingRulesFilter = ({
     }
   };
   return (
-    <div className="w-full">
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="pt-4 px-4 custom-form"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8 mb-6 ">
-            {/* Service Dropdown */}
-            <FormField
-              control={form.control}
-              name="service"
-              render={({ field }) => (
-                <FormItem className="relative w-full">
-                  <FormLabel
-                    className={`absolute left-3 px-2 text-sm text-gray-600 transition-all duration-200 pointer-events-none z-10
+    <>
+      <div className="w-full">
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="pt-4 px-4 custom-form"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8 mb-6 ">
+              {/* Service Dropdown */}
+              <FormField
+                control={form.control}
+                name="service"
+                render={({ field }) => (
+                  <FormItem className="relative w-full">
+                    <FormLabel
+                      className={`absolute left-3 px-2 text-sm text-gray-600 transition-all duration-200 pointer-events-none z-10
                     ${
                       field.value
                         ? "text-xs -top-1 left-3 bg-white text-blue-600"
                         : "top-3 text-gray-500"
                     }`}
-                  >
-                    SERVICE (CODE)
-                  </FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      setFormData({ ...formData, service: value });
-                    }}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger
-                        className={`h-10 w-full rounded-md border-2 px-3 text-sm transition-all duration-200 bg-transparent
-                        ${
-                          field.value
-                            ? "border-blue-500 shadow-sm"
-                            : "border-gray-300 hover:border-gray-400"
-                        }
-                        focus:border-blue-500 focus:shadow-sm focus:outline-none`}
-                      >
-                        <SelectValue placeholder=" " />{" "}
-                        {/* Empty space to support floating label */}
-                      </SelectTrigger>
-                    </FormControl>
-                    {/* <SelectContent>
-                    {destinations.map((country: string, index: number) => (
-                      <SelectItem key={index} value={country}></SelectItem>
-                    ))}
-                  </SelectContent> */}
-                    <SelectContent className="rounded-md border-gray-300">
-                      {filterOptions.service.map(
-                        (service: string, index: number) => (
-                          <SelectItem key={index} value={service}>
-                            {service}
-                          </SelectItem>
-                        )
-                      )}
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-
-            {/* Warehouse Dropdown */}
-            <FormField
-              control={form.control}
-              name="warehouse"
-              render={({ field }) => (
-                <FormItem className="relative w-full">
-                  <FormLabel
-                    className={`absolute left-3 px-2 text-sm text-gray-600 transition-all duration-200 pointer-events-none z-10
-                  ${
-                    field.value
-                      ? "text-xs -top-1 left-3 bg-white text-blue-600"
-                      : "top-3 text-gray-500"
-                  }`}
-                  >
-                    WAREHOUSE
-                  </FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      setFormData({ ...formData, warehouse: value });
-                    }}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger
-                        className={`h-10 w-full rounded-md border-2 px-3 text-sm transition-all duration-200 bg-transparent
-                        ${
-                          field.value
-                            ? "border-blue-500 shadow-sm"
-                            : "border-gray-300 hover:border-gray-400"
-                        }
-                        focus:border-blue-500 focus:shadow-sm focus:outline-none`}
-                      >
-                        <SelectValue placeholder="Select service" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {filterOptions.warehouse.map(
-                        (warehouse: string, index: number) => (
-                          <SelectItem key={index} value={warehouse}>
-                            {warehouse}
-                          </SelectItem>
-                        )
-                      )}
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-
-            {/* Users Dropdown */}
-            <FormField
-              control={form.control}
-              name="users"
-              render={({ field }) => (
-                <FormItem className="relative w-full">
-                  <FormLabel
-                    className={`absolute left-3 px-2 text-sm text-gray-600 transition-all duration-200 pointer-events-none z-10
-                  ${
-                    field.value
-                      ? "text-xs -top-1 left-3 bg-white text-blue-600"
-                      : "top-3 text-gray-500"
-                  }`}
-                  >
-                    USERS
-                  </FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      setFormData({ ...formData, users: value });
-                    }}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger
-                        className={`h-10 w-full rounded-md border-2 px-3 text-sm transition-all duration-200 bg-transparent
-                        ${
-                          field.value
-                            ? "border-blue-500 shadow-sm"
-                            : "border-gray-300 hover:border-gray-400"
-                        }
-                        focus:border-blue-500 focus:shadow-sm focus:outline-none`}
-                      >
-                        <SelectValue placeholder="Select carrier" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {filterOptions.users.map(
-                        (users: string, index: number) => (
-                          <SelectItem key={index} value={users}>
-                            {users}
-                          </SelectItem>
-                        )
-                      )}
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-
-            {/*Country Dropdown */}
-            <FormField
-              control={form.control}
-              name="country"
-              render={({ field }) => (
-                <FormItem className="relative w-full">
-                  <FormLabel
-                    className={`absolute left-3 px-2 text-sm text-gray-600 transition-all duration-200 pointer-events-none z-10
-                  ${
-                    field.value
-                      ? "text-xs -top-1 left-3 bg-white text-blue-600"
-                      : "top-3 text-gray-500"
-                  }`}
-                  >
-                    COUNTRY
-                  </FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      setFormData({ ...formData, country: value });
-                    }}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger
-                        className={`h-10 w-full rounded-md border-2 px-3 text-sm transition-all duration-200 bg-transparent
-                        ${
-                          field.value
-                            ? "border-blue-500 shadow-sm"
-                            : "border-gray-300 hover:border-gray-400"
-                        }
-                        focus:border-blue-500 focus:shadow-sm focus:outline-none`}
-                      >
-                        <SelectValue placeholder="Select country" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {filterOptions.country.map(
-                        (country: string, index: number) => (
-                          <SelectItem key={index} value={country}>
-                            {country}
-                          </SelectItem>
-                        )
-                      )}
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8  border-b border-gray-200">
-            <div className="grid grid-cols-2 gap-8 mb-6">
-              {/* Carrier Dropdown */}
-              <FormField
-                control={form.control}
-                name="carrier"
-                render={({ field }) => (
-                  <FormItem className="relative w-full">
-                    <FormLabel
-                      className={`absolute left-3 px-2 text-sm text-gray-600 transition-all duration-200 pointer-events-none z-10
-                  ${
-                    field.value
-                      ? "text-xs -top-1 left-3 bg-white text-blue-600"
-                      : "top-3 text-gray-500"
-                  }`}
                     >
-                      CARRIER
+                      SERVICE (CODE)
                     </FormLabel>
                     <Select
                       onValueChange={(value) => {
                         field.onChange(value);
-                        setFormData({ ...formData, carrier: value });
+                        setFormData({ ...formData, service: value });
                       }}
                       value={field.value}
                     >
@@ -498,14 +326,120 @@ const RoutingRulesFilter = ({
                         }
                         focus:border-blue-500 focus:shadow-sm focus:outline-none`}
                         >
-                          <SelectValue placeholder="Select shipper" />
+                          <SelectValue placeholder=" " />{" "}
+                          {/* Empty space to support floating label */}
+                        </SelectTrigger>
+                      </FormControl>
+                      {/* <SelectContent>
+                    {destinations.map((country: string, index: number) => (
+                      <SelectItem key={index} value={country}></SelectItem>
+                    ))}
+                  </SelectContent> */}
+                      <SelectContent className="rounded-md border-gray-300">
+                        {filterOptions.service.map(
+                          (service: string, index: number) => (
+                            <SelectItem key={index} value={service}>
+                              {service}
+                            </SelectItem>
+                          )
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+
+              {/* Warehouse Dropdown */}
+              <FormField
+                control={form.control}
+                name="warehouse"
+                render={({ field }) => (
+                  <FormItem className="relative w-full">
+                    <FormLabel
+                      className={`absolute left-3 px-2 text-sm text-gray-600 transition-all duration-200 pointer-events-none z-10
+                  ${
+                    field.value
+                      ? "text-xs -top-1 left-3 bg-white text-blue-600"
+                      : "top-3 text-gray-500"
+                  }`}
+                    >
+                      WAREHOUSE
+                    </FormLabel>
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        setFormData({ ...formData, warehouse: value });
+                      }}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger
+                          className={`h-10 w-full rounded-md border-2 px-3 text-sm transition-all duration-200 bg-transparent
+                        ${
+                          field.value
+                            ? "border-blue-500 shadow-sm"
+                            : "border-gray-300 hover:border-gray-400"
+                        }
+                        focus:border-blue-500 focus:shadow-sm focus:outline-none`}
+                        >
+                          <SelectValue placeholder="Select service" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {filterOptions.carrier.map(
-                          (carrier: string, index: number) => (
-                            <SelectItem key={index} value={carrier}>
-                              {carrier}
+                        {filterOptions.warehouse.map(
+                          (warehouse: string, index: number) => (
+                            <SelectItem key={index} value={warehouse}>
+                              {warehouse}
+                            </SelectItem>
+                          )
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+
+              {/* Users Dropdown */}
+              <FormField
+                control={form.control}
+                name="users"
+                render={({ field }) => (
+                  <FormItem className="relative w-full">
+                    <FormLabel
+                      className={`absolute left-3 px-2 text-sm text-gray-600 transition-all duration-200 pointer-events-none z-10
+                  ${
+                    field.value
+                      ? "text-xs -top-1 left-3 bg-white text-blue-600"
+                      : "top-3 text-gray-500"
+                  }`}
+                    >
+                      USERS
+                    </FormLabel>
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        setFormData({ ...formData, users: value });
+                      }}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger
+                          className={`h-10 w-full rounded-md border-2 px-3 text-sm transition-all duration-200 bg-transparent
+                        ${
+                          field.value
+                            ? "border-blue-500 shadow-sm"
+                            : "border-gray-300 hover:border-gray-400"
+                        }
+                        focus:border-blue-500 focus:shadow-sm focus:outline-none`}
+                        >
+                          <SelectValue placeholder="Select carrier" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {filterOptions.users.map(
+                          (users: string, index: number) => (
+                            <SelectItem key={index} value={users}>
+                              {users}
                             </SelectItem>
                           )
                         )}
@@ -564,44 +498,173 @@ const RoutingRulesFilter = ({
                 )}
               />
             </div>
-            {/*Filter and Download Buttons */}
-            <div className="flex flex-col sm:flex-row justify-end gap-4 items-center pt-2 flex-2 ">
-              <Button
-                type="submit"
-                className="bg-[#4AA3BA] hover:bg-[#3A8296] px-6 py-2"
-              >
-                {filterApplied ? "Clear Filter" : "Apply Filter"}
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="flex items-center gap-2 px-6 py-2 border-2 border-green-500 text-green-600 hover:bg-green-50 hover:border-green-600 transition-all duration-200"
-                  >
-                    <Download size={16} />
-                    Download
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-40 bg-white border border-gray-200 shadow-lg">
-                  <DropdownMenuItem
-                    onClick={() => exportData("csv")}
-                    className="cursor-pointer hover:bg-gray-50 transition-colors duration-150"
-                  >
-                    Download CSV
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => exportData("xlsx")}
-                    className="cursor-pointer hover:bg-gray-50 transition-colors duration-150"
-                  >
-                    Download XLSX
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8  border-b border-gray-200">
+              <div className="grid grid-cols-2 gap-8 mb-6">
+                {/*Country Dropdown */}
+                <FormField
+                  control={form.control}
+                  name="country"
+                  render={({ field }) => (
+                    <FormItem className="relative w-full">
+                      <FormLabel
+                        className={`absolute left-3 px-2 text-sm text-gray-600 transition-all duration-200 pointer-events-none z-10
+                  ${
+                    field.value
+                      ? "text-xs -top-1 left-3 bg-white text-blue-600"
+                      : "top-3 text-gray-500"
+                  }`}
+                      >
+                        COUNTRY
+                      </FormLabel>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setFormData({ ...formData, country: value });
+                        }}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger
+                            className={`h-10 w-full rounded-md border-2 px-3 text-sm transition-all duration-200 bg-transparent
+                        ${
+                          field.value
+                            ? "border-blue-500 shadow-sm"
+                            : "border-gray-300 hover:border-gray-400"
+                        }
+                        focus:border-blue-500 focus:shadow-sm focus:outline-none`}
+                          >
+                            <SelectValue placeholder="Select country" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {filterOptions.country.map(
+                            (country: string, index: number) => (
+                              <SelectItem key={index} value={country}>
+                                {country}
+                              </SelectItem>
+                            )
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+                {/* Carrier Dropdown */}
+                <FormField
+                  control={form.control}
+                  name="carrier"
+                  render={({ field }) => (
+                    <FormItem className="relative w-full">
+                      <FormLabel
+                        className={`absolute left-3 px-2 text-sm text-gray-600 transition-all duration-200 pointer-events-none z-10
+                  ${
+                    field.value
+                      ? "text-xs -top-1 left-3 bg-white text-blue-600"
+                      : "top-3 text-gray-500"
+                  }`}
+                      >
+                        CARRIER
+                      </FormLabel>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setFormData({ ...formData, carrier: value });
+                        }}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger
+                            className={`h-10 w-full rounded-md border-2 px-3 text-sm transition-all duration-200 bg-transparent
+                        ${
+                          field.value
+                            ? "border-blue-500 shadow-sm"
+                            : "border-gray-300 hover:border-gray-400"
+                        }
+                        focus:border-blue-500 focus:shadow-sm focus:outline-none`}
+                          >
+                            <SelectValue placeholder="Select shipper" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {filterOptions.carrier.map(
+                            (carrier: string, index: number) => (
+                              <SelectItem key={index} value={carrier}>
+                                {carrier}
+                              </SelectItem>
+                            )
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              {/*Filter and Download Buttons */}
+              <div className="flex flex-col sm:flex-row justify-end gap-4 items-center pt-2 flex-2 ">
+                <Button
+                  type="submit"
+                  className="bg-[#4AA3BA] hover:bg-[#3A8296] px-6 py-2"
+                >
+                  {filterApplied ? "Clear Filter" : "Apply Filter"}
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="flex items-center gap-2 px-6 py-2 border-2 border-green-500 text-green-600 hover:bg-green-50 hover:border-green-600 transition-all duration-200"
+                    >
+                      <Download size={16} />
+                      Download
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-40 bg-white border border-gray-200 shadow-lg">
+                    <DropdownMenuItem
+                      onClick={() => exportData("csv")}
+                      className="cursor-pointer hover:bg-gray-50 transition-colors duration-150"
+                    >
+                      Download CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => exportData("xlsx")}
+                      className="cursor-pointer hover:bg-gray-50 transition-colors duration-150"
+                    >
+                      Download XLSX
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button
+                  className="bg-[#4AA3BA] hover:bg-[#3A8296] px-6 py-2 rounded-sm"
+                  onClick={addRule}
+                >
+                  <Plus size={16} />
+                  Add Rule
+                </Button>
+              </div>
             </div>
+          </form>
+        </Form>
+      </div>
+      <Dialog open={isAddRuleOpen} onOpenChange={setIsAddRuleOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh]  p-0 flex flex-col">
+          <DialogHeader className="sticky top-0 z-10 bg-white border-b p-4 flex flex-row items-center justify-between">
+            <DialogTitle>Add New routing rule </DialogTitle>
+            <DialogClose asChild>
+              <button className="text-gray-500 hover:text-black">
+                <X className="h-5 w-5" />
+              </button>
+            </DialogClose>
+          </DialogHeader>
+          <div className="overflow-y-auto p-4 flex-1">
+            <EditRoutingRuleForm
+              routingTableData={routingRules}
+              routingRuleFilterData={routingRuleFilterData}
+              onSave={handleSave}
+              onCancel={handleCancel}
+            />
           </div>
-        </form>
-      </Form>
-    </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

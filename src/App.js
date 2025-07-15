@@ -134,7 +134,8 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/RoutingRules" element={<RoutingRulesPage />} />
+            <Route path="/rules/RoutingRules" element={<RoutingRulesPage />} />
+            {/* <Route path="/rules/RoutingRules" element={<RoutingRulesPage />} /> */}
             <Route
               path="/settings/manage-access/create"
               element={

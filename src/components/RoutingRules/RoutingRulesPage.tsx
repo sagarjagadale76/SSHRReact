@@ -341,7 +341,7 @@ const RoutingRulesPage = () => {
               onFilterApply={onFilterApply}
               routingRuleFilterData={routingFilterFormData}
             />
-            <div className="flex justify-end pb-4 pr-4">
+            {/*<div className="flex justify-end pb-4 pr-4">
               <Button
                 className="bg-[#4AA3BA] hover:bg-[#3A8296] px-6 py-2 rounded-sm"
                 onClick={addRule}
@@ -349,7 +349,7 @@ const RoutingRulesPage = () => {
                 <Plus size={16} />
                 Add Rule
               </Button>
-            </div>
+            </div>*/}
 
             <RoutingRulesTable
               table_data={filteredData}
