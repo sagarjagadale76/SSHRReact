@@ -90,11 +90,58 @@ export function RoutingRulesTable({
 
   const updateRoutingRuleTable = (rule) => {
     try {
+      //Update the service id, warehouse id, user_id, excluded_user_id
+      console.log("Check the rule : ", rule);
+      console.log("Check the allFilterData", routingRuleFilterData);
+      const warehouseId = routingRuleFilterData.warehouse.filter(
+        (warehouse) => warehouse.Title === rule.warehouse
+      )[0].WareHouseId;
+      const serviceId = routingRuleFilterData.services.filter(
+        (service) => service.title === rule.service
+      )[0].code;
+
+      //Get comma seperated user_id
+      const user_id = routingRuleFilterData.users
+        .filter((user) => {
+          const value = rule.users?.trim();
+
+          const inclMatch = value.match(/incl\s+([^]*?)(?=\s+excl|$)/i);
+          const incl = inclMatch
+            ? inclMatch[1].split(",").map((u) => u.trim())
+            : [];
+          return incl.includes(user.FullName);
+        })
+        .map((user) => user.Id)
+        .join(",");
+
+      //Get comma seperated excluded_user_id
+      const excluded_user_id = routingRuleFilterData.users
+        .filter((user) => {
+          const value = rule.users?.trim();
+
+          const exclMatch = value.match(/excl\s+([^]*?)(?=\s+incl|$)/i);
+          const excl = exclMatch
+            ? exclMatch[1].split(",").map((u) => u.trim())
+            : [];
+          return excl.includes(user.FullName);
+        })
+        .map((user) => user.Id)
+        .join(",");
+
+      const updatedRules = {
+        ...rule,
+        id: parseInt(rule.id),
+        user_id: user_id,
+        excluded_user_id: excluded_user_id,
+        "warehouse ID": warehouseId,
+        "service ID": serviceId,
+      };
+
       axios({
         method: "POST",
         url: API_ENDPOINT,
         headers: { "x-api-key": "TYXQrJvtOT1ac268C3eb0962We9XUlJu1Dls8Rvu" },
-        data: rule,
+        data: updatedRules,
       }).then(async (response) => {
         console.log("Check response: ", response);
       });
@@ -104,7 +151,6 @@ export function RoutingRulesTable({
   };
 
   const handleSave = (updatedRule: RoutingRule) => {
-    console.log("Check the updated rule: ", updatedRule);
     setRowData((prev) =>
       prev.map((row) => (row.id === updatedRule.id ? updatedRule : row))
     );

@@ -26,6 +26,14 @@ import RoutingRulesSkeleton from "./RoutingRulesSkeleton";
 
 //import { Skeleton } from "../ui/skeleton";
 
+interface RoutingRuleFullData {
+  carrier?: any;
+  countries?: any;
+  services?: any;
+  users?: any;
+  warehouse?: any;
+}
+
 const RoutingRulesPage = () => {
   const API_ENDPOINT =
     "https://l95zhchj6h.execute-api.eu-west-2.amazonaws.com/DEV/GetRoutingRules";
@@ -34,7 +42,8 @@ const RoutingRulesPage = () => {
 
   const [filteredData, setFilteredData] = React.useState([]);
   const [isAddRuleOpen, setIsAddRuleOpen] = React.useState(false);
-  const [routingFilterFormData, setRoutingFilterFormData] = React.useState({});
+  const [routingFilterFormData, setRoutingFilterFormData] =
+    React.useState<RoutingRuleFullData>({});
 
   function generateConditionsText(data) {
     const conditions = [];
@@ -174,6 +183,7 @@ const RoutingRulesPage = () => {
             });
           });
 
+          console.log("Check the results array : ", results);
           setTable_data(results);
           setFilteredData(results);
           setLoading(false);
@@ -297,6 +307,54 @@ const RoutingRulesPage = () => {
   const handleSave = (routingRule: RoutingRule) => {
     console.log("Save Clicked");
     const { conditions, ...latestRoutingRule } = routingRule;
+
+    //Update the service id, warehouse id, user_id, excluded_user_id
+    console.log("Check the rule : ", latestRoutingRule);
+    console.log("Check the allFilterData", routingFilterFormData);
+    const warehouseId = routingFilterFormData.warehouse.filter(
+      (warehouse) => warehouse.Title === latestRoutingRule.warehouse
+    )[0].WareHouseId;
+    const serviceId = routingFilterFormData.services.filter(
+      (service) => service.title === latestRoutingRule.service
+    )[0].code;
+
+    //Get comma seperated user_id
+    const user_id = routingFilterFormData.users
+      .filter((user) => {
+        const value = latestRoutingRule.users?.trim();
+
+        const inclMatch = value.match(/incl\s+([^]*?)(?=\s+excl|$)/i);
+        const incl = inclMatch
+          ? inclMatch[1].split(",").map((u) => u.trim())
+          : [];
+        return incl.includes(user.FullName);
+      })
+      .map((user) => user.Id)
+      .join(",");
+
+    //Get comma seperated excluded_user_id
+    const excluded_user_id = routingFilterFormData.users
+      .filter((user) => {
+        const value = latestRoutingRule.users?.trim();
+
+        const exclMatch = value.match(/excl\s+([^]*?)(?=\s+incl|$)/i);
+        const excl = exclMatch
+          ? exclMatch[1].split(",").map((u) => u.trim())
+          : [];
+        return excl.includes(user.FullName);
+      })
+      .map((user) => user.Id)
+      .join(",");
+
+    const updatedRules = {
+      ...latestRoutingRule,
+      id: parseInt(latestRoutingRule.id),
+      user_id: user_id,
+      excluded_user_id: excluded_user_id,
+      "warehouse ID": warehouseId,
+      "service ID": serviceId,
+    };
+
     const API_ENDPOINT =
       "https://y0jwh0qg1b.execute-api.eu-west-2.amazonaws.com/DEV/AddRoutingRule";
     try {
@@ -304,7 +362,7 @@ const RoutingRulesPage = () => {
         method: "POST",
         url: API_ENDPOINT,
         headers: { "x-api-key": "TYXQrJvtOT1ac268C3eb0962We9XUlJu1Dls8Rvu" },
-        data: latestRoutingRule,
+        data: updatedRules,
       }).then(async (response) => {
         console.log("Check response: ", response);
       });
